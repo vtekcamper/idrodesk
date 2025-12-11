@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: idrodesk-db
+    environment:
+      POSTGRES_USER: idrodesk
+      POSTGRES_PASSWORD: idrodesk_password
+      POSTGRES_DB: idrodesk
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U idrodesk"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: idrodesk-backend
+    environment:
+      DATABASE_URL: postgresql://idrodesk:idrodesk_password@postgres:5432/idrodesk?schema=public
+      JWT_SECRET: change-this-in-production
+      JWT_REFRESH_SECRET: change-this-in-production-refresh
+      PORT: 3001
+      NODE_ENV: production
+      CORS_ORIGIN: http://localhost:3000
+      UPLOAD_DIR: /app/uploads
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./backend/uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: sh -c "npx prisma migrate deploy && npm start"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: idrodesk-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+

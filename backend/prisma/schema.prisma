@@ -1,0 +1,328 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Company {
+  id                String    @id @default(cuid())
+  ragioneSociale    String
+  piva              String    @unique
+  indirizzo         String?
+  telefono          String?
+  email             String?
+  logoUrl           String?
+  pianoAbbonamento  PianoAbbonamento @default(BASIC)
+  createdAt         DateTime  @default(now())
+
+  users             User[]
+  clients           Client[]
+  quotes            Quote[]
+  jobs              Job[]
+  materials         Material[]
+  checklists        Checklist[]
+
+  @@map("companies")
+}
+
+enum PianoAbbonamento {
+  BASIC
+  PRO
+  ELITE
+}
+
+model User {
+  id            String    @id @default(cuid())
+  companyId     String
+  nome          String
+  cognome       String
+  email         String
+  telefono      String?
+  ruolo         Ruolo     @default(BACKOFFICE)
+  passwordHash  String
+  attivo        Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+
+  company       Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  jobsAssegnati Job[]     @relation("JobAssegnatoA")
+  jobChecklists JobChecklist[]
+  attachments   JobAttachment[]
+
+  @@unique([companyId, email])
+  @@map("users")
+}
+
+enum Ruolo {
+  OWNER
+  TECNICO
+  BACKOFFICE
+}
+
+model Client {
+  id        String    @id @default(cuid())
+  companyId String
+  nome      String
+  cognome   String?
+  indirizzo String?
+  citta     String?
+  cap       String?
+  telefono  String?
+  email     String?
+  note      String?
+  createdAt DateTime  @default(now())
+
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  sites     Site[]
+  quotes    Quote[]
+  jobs      Job[]
+
+  @@map("clients")
+}
+
+model Site {
+  id        String   @id @default(cuid())
+  clientId  String
+  descrizione String
+  indirizzo String?
+  note      String?
+
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  quotes    Quote[]
+  jobs      Job[]
+
+  @@map("sites")
+}
+
+model Quote {
+  id              String      @id @default(cuid())
+  companyId       String
+  clientId        String
+  siteId          String?
+  numeroPreventivo String     @unique
+  data            DateTime    @default(now())
+  stato           StatoPreventivo @default(BOZZA)
+  totaleNetto     Decimal     @default(0) @db.Decimal(10, 2)
+  totaleIva       Decimal     @default(0) @db.Decimal(10, 2)
+  totaleLordo     Decimal     @default(0) @db.Decimal(10, 2)
+  noteInterne     String?
+  noteCliente     String?
+  createdAt       DateTime    @default(now())
+
+  company         Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  client          Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  site            Site?       @relation(fields: [siteId], references: [id], onDelete: SetNull)
+  items           QuoteItem[]
+  job             Job?
+
+  @@map("quotes")
+}
+
+enum StatoPreventivo {
+  BOZZA
+  INVIATO
+  ACCETTATO
+  RIFIUTATO
+  SCADUTO
+}
+
+model QuoteItem {
+  id                String   @id @default(cuid())
+  quoteId           String
+  descrizione       String
+  tipo              TipoRiga @default(MATERIALE)
+  quantita          Decimal  @default(1) @db.Decimal(10, 2)
+  unita             String   @default("pz")
+  prezzoUnitario    Decimal  @default(0) @db.Decimal(10, 2)
+  scontoPercentuale Decimal  @default(0) @db.Decimal(5, 2)
+  ivaPercentuale    Decimal  @default(22) @db.Decimal(5, 2)
+  totaleRiga        Decimal  @default(0) @db.Decimal(10, 2)
+
+  quote             Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@map("quote_items")
+}
+
+enum TipoRiga {
+  MANODOPERA
+  MATERIALE
+  FORFAIT
+}
+
+model Job {
+  id                  String      @id @default(cuid())
+  companyId           String
+  clientId            String
+  siteId              String?
+  titolo              String
+  descrizione         String?
+  stato               StatoJob    @default(BOZZA)
+  priorita            Priorita    @default(NORMALE)
+  dataProgrammata     DateTime?
+  oraProgrammata      String?     // Time string (HH:mm)
+  durataPrevistaMinuti Int?
+  assegnatoA          String?
+  quoteId             String?     @unique
+  createdAt           DateTime    @default(now())
+  completedAt         DateTime?
+
+  company             Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  client              Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  site                Site?       @relation(fields: [siteId], references: [id], onDelete: SetNull)
+  tecnico             User?       @relation("JobAssegnatoA", fields: [assegnatoA], references: [id], onDelete: SetNull)
+  quote               Quote?      @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+
+  materials           JobMaterial[]
+  checklists          JobChecklist[]
+  attachments         JobAttachment[]
+
+  @@map("jobs")
+}
+
+enum StatoJob {
+  BOZZA
+  PIANIFICATO
+  IN_CORSO
+  COMPLETATO
+  FATTURATO
+  ANNULLATO
+}
+
+enum Priorita {
+  NORMALE
+  URGENTE
+}
+
+model Material {
+  id            String   @id @default(cuid())
+  companyId     String
+  codice        String
+  descrizione   String
+  categoria     String?
+  prezzoAcquisto Decimal? @db.Decimal(10, 2)
+  prezzoVendita Decimal  @default(0) @db.Decimal(10, 2)
+  unita         String   @default("pz")
+  scortaMinima  Int      @default(0)
+  giacenza      Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  company       Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  jobMaterials  JobMaterial[]
+
+  @@unique([companyId, codice])
+  @@map("materials")
+}
+
+model JobMaterial {
+  id                String   @id @default(cuid())
+  jobId             String
+  materialId        String?
+  descrizione       String
+  quantita          Decimal  @default(1) @db.Decimal(10, 2)
+  prezzoUnitario    Decimal  @default(0) @db.Decimal(10, 2)
+  scontoPercentuale Decimal  @default(0) @db.Decimal(5, 2)
+  totale            Decimal  @default(0) @db.Decimal(10, 2)
+
+  job               Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  material          Material? @relation(fields: [materialId], references: [id], onDelete: SetNull)
+
+  @@map("job_materials")
+}
+
+model Checklist {
+  id            String      @id @default(cuid())
+  companyId     String
+  nome          String
+  descrizione   String?
+  tipoIntervento TipoIntervento
+  createdAt     DateTime    @default(now())
+
+  company       Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  items         ChecklistItem[]
+  jobChecklists JobChecklist[]
+
+  @@map("checklists")
+}
+
+enum TipoIntervento {
+  MANUTENZIONE
+  RIPARAZIONE
+  INSTALLAZIONE
+}
+
+model ChecklistItem {
+  id          String      @id @default(cuid())
+  checklistId String
+  ordine      Int
+  descrizione String
+  tipoCampo   TipoCampo   @default(CHECKBOX)
+
+  checklist   Checklist   @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  responses   JobChecklistResponse[]
+
+  @@map("checklist_items")
+}
+
+enum TipoCampo {
+  CHECKBOX
+  TESTO
+  NUMERO
+  SI_NO
+}
+
+model JobChecklist {
+  id            String    @id @default(cuid())
+  jobId         String
+  checklistId   String
+  compilataDa   String
+  compilataIl   DateTime  @default(now())
+
+  job           Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  checklist     Checklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  compilatore   User      @relation(fields: [compilataDa], references: [id], onDelete: Cascade)
+  responses     JobChecklistResponse[]
+
+  @@map("job_checklists")
+}
+
+model JobChecklistResponse {
+  id              String    @id @default(cuid())
+  jobChecklistId  String
+  checklistItemId String
+  valoreTesto     String?
+  valoreNumero    Decimal?  @db.Decimal(10, 2)
+  valoreBoolean   Boolean?
+  note            String?
+
+  jobChecklist    JobChecklist @relation(fields: [jobChecklistId], references: [id], onDelete: Cascade)
+  checklistItem   ChecklistItem @relation(fields: [checklistItemId], references: [id], onDelete: Cascade)
+
+  @@map("job_checklist_responses")
+}
+
+model JobAttachment {
+  id          String        @id @default(cuid())
+  jobId       String
+  tipo        TipoAllegato @default(FOTO)
+  fileUrl     String
+  descrizione String?
+  uploadedBy  String
+  createdAt   DateTime      @default(now())
+
+  job         Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  uploader    User          @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
+
+  @@map("job_attachments")
+}
+
+enum TipoAllegato {
+  FOTO
+  DOCUMENTO
+  ALTRO
+}
+
