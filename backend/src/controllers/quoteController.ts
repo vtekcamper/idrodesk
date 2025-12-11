@@ -302,7 +302,10 @@ export const convertToJob = async (req: Request, res: Response) => {
 
     const quote = await prisma.quote.findFirst({
       where: { id, companyId },
-      include: { client: true },
+      include: { 
+        client: true,
+        job: true,
+      },
     });
 
     if (!quote) {

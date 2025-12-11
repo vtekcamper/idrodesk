@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyAccessToken } from '../utils/jwt';
+import { verifyToken } from '../utils/jwt';
 
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -10,7 +10,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
     }
 
     const token = authHeader.substring(7);
-    const payload = verifyAccessToken(token);
+    const payload = verifyToken(token);
 
     req.user = {
       userId: payload.userId,

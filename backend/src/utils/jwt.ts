@@ -7,6 +7,7 @@ export interface JwtPayload {
   userId: string;
   companyId: string;
   role: string;
+  email: string;
 }
 
 export function signToken(payload: JwtPayload): string {
@@ -30,4 +31,7 @@ export function verifyToken(token: string): JwtPayload {
   const decoded = jwt.verify(token, JWT_SECRET);
   return decoded as JwtPayload;
 }
-declare module 'pdfkit';
+
+// Alias per compatibilità
+export const verifyAccessToken = verifyToken;
+export const verifyRefreshToken = verifyToken; 
