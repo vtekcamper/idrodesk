@@ -7,7 +7,7 @@ COPY package*.json ./
 COPY prisma ./prisma/
 
 # Install dependencies
-RUN npm ci
+RUN npm install
 
 # Copy source code
 COPY . .
@@ -21,4 +21,3 @@ RUN npm run build
 EXPOSE 3001
 
 CMD ["npm", "start"]
-
