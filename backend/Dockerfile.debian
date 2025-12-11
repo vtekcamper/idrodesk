@@ -1,0 +1,30 @@
+# Alternative Dockerfile using Debian-based image (if Alpine doesn't work)
+FROM node:18-slim
+
+WORKDIR /app
+
+# Install OpenSSL and other dependencies for Prisma
+RUN apt-get update && \
+    apt-get install -y openssl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy package files
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Install dependencies
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Generate Prisma Client
+RUN npx prisma generate
+
+# Build
+RUN npm run build
+
+EXPOSE 3001
+
+CMD ["npm", "start"]
+
