@@ -53,10 +53,31 @@ router.post('/super-admins', async (req, res, next) => {
     
     // Prova a contare i super admin, ma se le tabelle non esistono, permetti la creazione
     let superAdminCount = 0;
+    let testSuperAdmin = null;
     try {
       superAdminCount = await prisma.user.count({
         where: { isSuperAdmin: true },
       });
+      
+      // Se c'è solo un super admin e è quello di test (test@test.com), permettiamo di eliminarlo e crearne uno nuovo
+      if (superAdminCount === 1) {
+        testSuperAdmin = await prisma.user.findFirst({
+          where: { 
+            isSuperAdmin: true,
+            email: 'test@test.com'
+          },
+        });
+        
+        // Se esiste solo il super admin di test, eliminiamolo e permettiamo la creazione
+        if (testSuperAdmin) {
+          console.log('Found test super admin, deleting it to allow real super admin creation');
+          await prisma.user.delete({
+            where: { id: testSuperAdmin.id },
+          });
+          // Ora possiamo creare il super admin reale
+          return createSuperAdmin(req, res);
+        }
+      }
     } catch (error: any) {
       // Se le tabelle non esistono ancora (errore P2021), permetti la creazione
       if (error.code === 'P2021' || error.message?.includes('does not exist')) {
@@ -67,7 +88,7 @@ router.post('/super-admins', async (req, res, next) => {
       throw error;
     }
     
-    // Se già esiste un super admin, richiedi autenticazione
+    // Se già esiste un super admin (e non è quello di test), richiedi autenticazione
     if (superAdminCount > 0) {
       // Verifica se c'è un token
       const authHeader = req.headers.authorization;
