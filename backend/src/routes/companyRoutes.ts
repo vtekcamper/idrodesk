@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
 import { requireTenant } from '../middleware/tenantIsolation';
+import { exportRateLimiter, emailRateLimiter } from '../middleware/rateLimit';
 import {
   getCompanySettings,
   updateCompanySettings,
@@ -34,8 +35,8 @@ router.get('/usage', getCompanyUsage);
 router.get('/billing', getCompanyBilling);
 router.get('/payments', getCompanyPayments);
 
-// GDPR
-router.post('/export', requestDataExport);
+// GDPR (con rate limiting)
+router.post('/export', exportRateLimiter, requestDataExport);
 router.get('/exports', getDataExports);
 router.get('/exports/:id/download', downloadDataExport);
 router.delete('/delete', softDeleteCompany);

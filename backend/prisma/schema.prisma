@@ -10,6 +10,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Seed script
+// Run with: npm run prisma:seed
+
 model Company {
   id                String    @id @default(cuid())
   ragioneSociale    String

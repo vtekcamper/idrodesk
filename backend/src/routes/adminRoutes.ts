@@ -185,8 +185,9 @@ router.post('/payments', createPayment);
 router.get('/payments', getAllPayments);
 router.get('/payments/:id', getPayment);
 
-// Email
-router.post('/emails/send', sendEmail);
+// Email (con rate limiting)
+import { emailRateLimiter, createRateLimiter } from '../middleware/rateLimit';
+router.post('/emails/send', emailRateLimiter, sendEmail);
 router.post('/emails/preview', previewEmailTemplate);
 router.get('/emails/templates', getEmailTemplates);
 router.get('/emails', getAllEmailNotifications);

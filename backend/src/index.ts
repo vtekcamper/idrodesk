@@ -5,26 +5,28 @@ import path from 'path';
 import { errorHandler } from './middleware/errorHandler';
 import { requestId } from './middleware/auditLog';
 import { apiRateLimiter, loginRateLimiter } from './middleware/rateLimit';
+import { logger } from './utils/logger';
+import { requestLogger } from './middleware/requestLogger';
 
 // Avvia workers (solo se non in test mode)
 if (process.env.NODE_ENV !== 'test' && process.env.SKIP_WORKERS !== 'true') {
   // Email worker
   import('./workers/emailWorker').then(() => {
-    console.log('📧 Email worker started');
+    logger.info('Email worker started');
   }).catch((error) => {
-    console.error('Error starting email worker:', error);
+    logger.error('Error starting email worker', { error: error.message });
     if (error.message?.includes('ECONNREFUSED')) {
-      console.warn('⚠️  Redis not available, email worker disabled.');
+      logger.warn('Redis not available, email worker disabled');
     }
   });
 
   // Data export worker
   import('./workers/dataExportWorker').then(() => {
-    console.log('📦 Data export worker started');
+    logger.info('Data export worker started');
   }).catch((error) => {
-    console.error('Error starting data export worker:', error);
+    logger.error('Error starting data export worker', { error: error.message });
     if (error.message?.includes('ECONNREFUSED')) {
-      console.warn('⚠️  Redis not available, data export worker disabled.');
+      logger.warn('Redis not available, data export worker disabled');
     }
   });
 }
@@ -56,6 +58,9 @@ app.use(cors({
 // Request ID middleware (deve essere prima di tutto)
 app.use(requestId);
 
+// Request logger (dopo requestId per avere requestId nei log)
+app.use(requestLogger);
+
 // Rate limiting generale (applicato a tutte le route)
 app.use('/api', apiRateLimiter);
 
@@ -72,9 +77,55 @@ app.use(express.urlencoded({ extended: true }));
 const uploadDir = process.env.UPLOAD_DIR || './uploads';
 app.use('/uploads', express.static(path.resolve(uploadDir)));
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+// Health check avanzato
+app.get('/health', async (req, res) => {
+  const health: any = {
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development',
+    version: process.env.npm_package_version || '1.0.0',
+  };
+
+  try {
+    // Verifica database
+    const prisma = (await import('./config/database')).default;
+    await prisma.$queryRaw`SELECT 1`;
+    health.database = 'connected';
+
+    // Verifica Redis (opzionale)
+    try {
+      const { getRedisClient } = await import('./config/redis');
+      const redis = getRedisClient();
+      await redis.ping();
+      health.redis = 'connected';
+    } catch (redisError) {
+      health.redis = 'disconnected';
+      health.warnings = health.warnings || [];
+      health.warnings.push('Redis not available (workers disabled)');
+    }
+
+    res.json(health);
+  } catch (error: any) {
+    logger.error('Health check failed', { error: error.message });
+    res.status(503).json({
+      status: 'error',
+      timestamp: new Date().toISOString(),
+      error: 'Service unavailable',
+      database: 'disconnected',
+    });
+  }
+});
+
+// Monitoring hook (per servizi esterni come UptimeRobot)
+app.get('/monitoring', async (req, res) => {
+  try {
+    const prisma = (await import('./config/database')).default;
+    await prisma.$queryRaw`SELECT 1`;
+    res.status(200).json({ status: 'healthy' });
+  } catch (error) {
+    res.status(503).json({ status: 'unhealthy' });
+  }
 });
 
 // API Routes
@@ -92,20 +143,22 @@ app.use('/api/job-checklists', jobChecklistRouter);
 // Error handler
 app.use(errorHandler);
 
-// Gestione errori non catturati
+// Gestione errori non catturati (logger li gestisce già, ma aggiungiamo log)
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  logger.error('Unhandled Rejection', { reason, promise });
 });
 
 process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
+  logger.error('Uncaught Exception', { error: error.message, stack: error.stack });
   process.exit(1);
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📁 Upload directory: ${path.resolve(uploadDir)}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 CORS Origin: ${process.env.CORS_ORIGIN || 'http://localhost:3000'}`);
+  logger.info('Server started', {
+    port: PORT,
+    uploadDir: path.resolve(uploadDir),
+    environment: process.env.NODE_ENV || 'development',
+    corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  });
 });
 
