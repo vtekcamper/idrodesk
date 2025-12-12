@@ -31,6 +31,8 @@ model Company {
   materials         Material[]
   checklists        Checklist[]
   subscriptionHistory SubscriptionHistory[]
+  payments           Payment[]
+  emailNotifications EmailNotification[]
 
   @@map("companies")
 }
@@ -342,7 +344,89 @@ model SubscriptionHistory {
   cambiatoDa    String?   // ID super admin che ha fatto il cambio
 
   company       Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  payment       Payment?
 
   @@map("subscription_history")
+}
+
+model Payment {
+  id              String      @id @default(cuid())
+  companyId       String
+  subscriptionHistoryId String? @unique
+  amount          Decimal     @db.Decimal(10, 2)
+  currency        String      @default("EUR")
+  status          PaymentStatus @default(PENDING)
+  paymentMethod   PaymentMethod
+  paymentProvider PaymentProvider
+  providerPaymentId String?   // ID del pagamento dal provider (Stripe/PayPal)
+  metadata        String?     // JSON con dati aggiuntivi
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  paidAt          DateTime?
+
+  company         Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  subscriptionHistory SubscriptionHistory? @relation(fields: [subscriptionHistoryId], references: [id], onDelete: SetNull)
+
+  @@map("payments")
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  PAYPAL
+  BANK_TRANSFER
+  MANUAL
+}
+
+enum PaymentProvider {
+  STRIPE
+  PAYPAL
+  MANUAL
+}
+
+model EmailNotification {
+  id            String    @id @default(cuid())
+  companyId     String?
+  userId        String?
+  type          EmailType
+  to            String    // Email destinatario
+  subject       String
+  body          String    // HTML body
+  status        EmailStatus @default(PENDING)
+  sentAt        DateTime?
+  error         String?
+  metadata      String?   // JSON con dati aggiuntivi
+  createdAt     DateTime  @default(now())
+
+  company       Company?  @relation(fields: [companyId], references: [id], onDelete: SetNull)
+
+  @@map("email_notifications")
+}
+
+enum EmailType {
+  WELCOME
+  SUBSCRIPTION_EXPIRING
+  SUBSCRIPTION_EXPIRED
+  SUBSCRIPTION_RENEWED
+  PAYMENT_SUCCESS
+  PAYMENT_FAILED
+  PLAN_UPGRADE
+  PLAN_DOWNGRADE
+  INVOICE
+  CUSTOM
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  FAILED
 }
 

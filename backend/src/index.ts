@@ -26,6 +26,13 @@ app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
   credentials: true,
 }));
+
+// Stripe webhook (deve essere prima di express.json() per ricevere raw body)
+app.post('/api/admin/payments/webhook/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
+  const { stripeWebhook } = await import('./controllers/paymentController');
+  stripeWebhook(req, res);
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

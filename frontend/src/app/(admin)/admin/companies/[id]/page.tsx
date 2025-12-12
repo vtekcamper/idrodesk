@@ -1,12 +1,12 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-
-export const dynamic = 'force-dynamic';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '@/lib/adminApi';
-import { adminAuth } from '@/lib/adminAuth';
+import AdminLayout from '@/components/AdminLayout';
 import { useState } from 'react';
+
+export const dynamic = 'force-dynamic';
 
 export default function AdminCompanyDetailPage() {
   const params = useParams();
@@ -46,17 +46,24 @@ export default function AdminCompanyDetailPage() {
     },
   });
 
-  if (!adminAuth.isSuperAdmin()) {
-    router.push('/admin/login');
-    return null;
-  }
-
   if (isLoading) {
-    return <div className="p-8">Caricamento...</div>;
+    return (
+      <AdminLayout>
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-8">Caricamento...</div>
+        </div>
+      </AdminLayout>
+    );
   }
 
   if (!company) {
-    return <div className="p-8">Azienda non trovata</div>;
+    return (
+      <AdminLayout>
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-8">Azienda non trovata</div>
+        </div>
+      </AdminLayout>
+    );
   }
 
   const handleUpdatePlan = (e: React.FormEvent) => {
@@ -65,24 +72,21 @@ export default function AdminCompanyDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <button
-                onClick={() => router.back()}
-                className="text-primary-600 hover:text-primary-700 mb-2"
-              >
-                ← Indietro
-              </button>
-              <h1 className="text-2xl font-bold text-gray-900">{company.ragioneSociale}</h1>
-            </div>
+    <AdminLayout>
+      <div className="flex-1 overflow-y-auto">
+        <header className="bg-white shadow-sm border-b">
+          <div className="px-6 py-4">
+            <button
+              onClick={() => router.back()}
+              className="text-primary-600 hover:text-primary-700 mb-2 inline-block"
+            >
+              ← Indietro
+            </button>
+            <h1 className="text-2xl font-bold text-gray-900">{company.ragioneSociale}</h1>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="p-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Info Azienda */}
           <div className="card">
@@ -317,8 +321,9 @@ export default function AdminCompanyDetailPage() {
             </div>
           </div>
         )}
-      </main>
-    </div>
+        </main>
+      </div>
+    </AdminLayout>
   );
 }
 

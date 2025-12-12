@@ -13,6 +13,27 @@ import {
   loginSuperAdmin,
   getSuperAdmins,
 } from '../controllers/adminUserController';
+import {
+  getAllUsers,
+  getUser,
+  updateUser,
+  toggleUserStatus,
+} from '../controllers/adminUsersController';
+import {
+  createPayment,
+  getAllPayments,
+  getPayment,
+  stripeWebhook,
+} from '../controllers/paymentController';
+import {
+  sendEmail,
+  getAllEmailNotifications,
+} from '../controllers/emailController';
+import {
+  getAdvancedReports,
+  getExpiringSubscriptions,
+  getTopCompanies,
+} from '../controllers/reportsController';
 
 const router = Router();
 
@@ -127,6 +148,26 @@ router.get('/stats', getSystemStats);
 
 // Super admins management (GET richiede sempre autenticazione)
 router.get('/super-admins', getSuperAdmins);
+
+// Users management (tutti gli utenti di tutte le aziende)
+router.get('/users', getAllUsers);
+router.get('/users/:id', getUser);
+router.patch('/users/:id', updateUser);
+router.patch('/users/:id/status', toggleUserStatus);
+
+// Payments
+router.post('/payments', createPayment);
+router.get('/payments', getAllPayments);
+router.get('/payments/:id', getPayment);
+
+// Email
+router.post('/emails/send', sendEmail);
+router.get('/emails', getAllEmailNotifications);
+
+// Reports
+router.get('/reports/advanced', getAdvancedReports);
+router.get('/reports/subscriptions/expiring', getExpiringSubscriptions);
+router.get('/reports/companies/top', getTopCompanies);
 
 export default router;
 
