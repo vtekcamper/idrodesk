@@ -14,9 +14,11 @@ export interface JwtPayload {
 }
 
 export function signToken(payload: JwtPayload, expiresIn?: string): string {
+  const finalExpiresIn = expiresIn || JWT_EXPIRES_IN;
+  // expiresIn può essere string o number secondo jsonwebtoken
   const options: SignOptions = {
-    expiresIn: (expiresIn || JWT_EXPIRES_IN) as string,
-  };
+    expiresIn: finalExpiresIn,
+  } as SignOptions;
   return jwt.sign(payload, JWT_SECRET, options);
 }
 
