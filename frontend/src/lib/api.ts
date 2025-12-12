@@ -180,17 +180,44 @@ export const usersApi = {
 
 // Company API (Tenant Admin)
 export const companyApi = {
-  getSettings: () => apiClient.axiosInstance.get('/company/settings'),
-  updateSettings: (data: any) => apiClient.axiosInstance.patch('/company/settings', data),
+  // Settings unificato
+  getAllSettings: () => apiClient.axiosInstance.get('/company/settings'),
+  // Company settings
+  updateCompanySettings: (data: any) => apiClient.axiosInstance.patch('/company/settings/company', data),
+  // Document settings
+  getDocumentSettings: () => apiClient.axiosInstance.get('/company/settings/documents'),
+  updateDocumentSettings: (data: any) => apiClient.axiosInstance.patch('/company/settings/documents', data),
+  // App preferences
+  getAppPreferences: () => apiClient.axiosInstance.get('/company/settings/preferences'),
+  updateAppPreferences: (data: any) => apiClient.axiosInstance.patch('/company/settings/preferences', data),
+  // Notifications
+  updateNotifications: (data: any) => apiClient.axiosInstance.patch('/company/settings/notifications', data),
+  // Usage & Billing
   getUsage: () => apiClient.axiosInstance.get('/company/usage'),
   getBilling: () => apiClient.axiosInstance.get('/company/billing'),
   getPayments: (params?: { page?: number; limit?: number }) =>
     apiClient.axiosInstance.get('/company/payments', { params }),
+  // GDPR
   requestDataExport: (data: { format?: string; includeTables?: string[] }) =>
     apiClient.axiosInstance.post('/company/export', data),
   getDataExports: () => apiClient.axiosInstance.get('/company/exports'),
   downloadDataExport: (id: string) =>
     apiClient.axiosInstance.get(`/company/exports/${id}/download`, { responseType: 'blob' }),
   softDeleteCompany: () => apiClient.axiosInstance.delete('/company/delete'),
+};
+
+// Auth API
+export const authApi = {
+  changePassword: (data: { currentPassword: string; newPassword: string }) =>
+    apiClient.axiosInstance.post('/auth/change-password', data),
+};
+
+// Users API (esteso)
+export const usersApi = {
+  getAll: () => apiClient.axiosInstance.get('/users'),
+  create: (data: any) => apiClient.axiosInstance.post('/users', data),
+  update: (id: string, data: any) =>
+    apiClient.axiosInstance.patch(`/users/${id}`, data),
+  resetPassword: (id: string) => apiClient.axiosInstance.post(`/users/${id}/reset-password`),
 };
 

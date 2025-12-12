@@ -197,5 +197,33 @@ router.patch('/:id', async (req, res) => {
   }
 });
 
+// Reset password (invio email reset - placeholder)
+router.post('/:id/reset-password', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const where: any = req.user?.isSuperAdmin
+      ? { id }
+      : { id, companyId: req.companyId! };
+
+    const user = await prisma.user.findFirst({
+      where,
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'Utente non trovato' });
+    }
+
+    // TODO: Implementare invio email reset password
+    // Per ora ritorna success (placeholder)
+    res.json({
+      message: 'Email di reset password inviata (funzionalità in arrivo)',
+      email: user.email,
+    });
+  } catch (error: any) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: error.message || 'Errore nell\'invio reset password' });
+  }
+});
+
 export default router;
 

@@ -14,6 +14,15 @@ import {
   softDeleteCompany,
 } from '../controllers/companyController';
 import {
+  getAllSettings,
+  updateCompanySettings as updateCompanySettingsNew,
+  getDocumentSettings,
+  updateDocumentSettings,
+  getAppPreferences,
+  updateAppPreferences,
+  updateNotifications,
+} from '../controllers/settingsController';
+import {
   requestDataExport as gdprRequestExport,
   getDataExports as gdprGetExports,
   downloadDataExport as gdprDownloadExport,
@@ -26,9 +35,22 @@ const router = Router();
 router.use(authenticate);
 router.use(requireTenant);
 
-// Company Settings
-router.get('/settings', getCompanySettings);
-router.patch('/settings', updateCompanySettings);
+// Settings unificato (GET tutte le impostazioni)
+router.get('/settings', getAllSettings);
+
+// Company Settings (azienda)
+router.patch('/settings/company', updateCompanySettingsNew);
+
+// Document Settings (preventivi/rapporti)
+router.get('/settings/documents', getDocumentSettings);
+router.patch('/settings/documents', updateDocumentSettings);
+
+// App Preferences
+router.get('/settings/preferences', getAppPreferences);
+router.patch('/settings/preferences', updateAppPreferences);
+
+// Notifications
+router.patch('/settings/notifications', updateNotifications);
 
 // Usage & Billing
 router.get('/usage', getCompanyUsage);

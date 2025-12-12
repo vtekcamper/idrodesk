@@ -345,6 +345,56 @@ export const forgotPassword = async (req: Request, res: Response) => {
 /**
  * Reset password: usa token per resettare password
  */
+export const changePassword = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'Non autenticato' });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Password corrente e nuova password richieste' });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: 'La nuova password deve essere di almeno 8 caratteri' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'Utente non trovato' });
+    }
+
+    // Verifica password corrente
+    const isValid = await comparePassword(currentPassword, user.passwordHash);
+    if (!isValid) {
+      return res.status(401).json({ error: 'Password corrente non corretta' });
+    }
+
+    // Aggiorna password
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        passwordHash: await hashPassword(newPassword),
+      },
+    });
+
+    await logAuditAction(req, 'CHANGE_PASSWORD', 'User', userId, {
+      userId,
+    });
+
+    res.json({ message: 'Password aggiornata con successo' });
+  } catch (error: any) {
+    console.error('Change password error:', error);
+    res.status(500).json({ error: error.message || 'Errore nel cambio password' });
+  }
+};
+
 export const resetPassword = async (req: Request, res: Response) => {
   try {
     const { token, password } = req.body;

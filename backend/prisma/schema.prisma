@@ -29,6 +29,20 @@ model Company {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
+  // Campi estesi per CompanyProfile
+  nomeCommerciale   String?
+  codiceFiscale     String?
+  citta             String?
+  cap               String?
+  provincia         String?
+  paese             String?  @default("IT")
+  sitoWeb           String?
+  pecEmail          String?
+  sdiCode           String?
+  iban              String?
+  defaultPaymentTermsDays Int @default(30)
+  notePublic        String?  // Testo breve per documenti
+
   users             User[]
   clients           Client[]
   quotes            Quote[]
@@ -41,6 +55,8 @@ model Company {
   auditLogs         AuditLog[]
   dataExports       DataExport[]
   refreshTokens     RefreshToken[]
+  documentSettings  DocumentSettings?
+  appPreferences    AppPreferences?
 
   @@index([subscriptionStatus])
   @@index([deletedAt])
@@ -587,6 +603,59 @@ model JobQueue {
   @@index([companyId])
   @@index([scheduledAt])
   @@map("job_queue")
+}
+
+// Document Settings (Preventivi e Rapporti)
+model DocumentSettings {
+  id                      String   @id @default(cuid())
+  companyId               String   @unique
+  quotePrefix             String   @default("PREV")
+  quoteNextNumber         Int      @default(1)
+  jobPrefix               String   @default("INT")
+  jobNextNumber           Int      @default(1)
+  docFooterText           String?
+  docHeaderText           String?
+  defaultQuoteValidityDays Int     @default(30)
+  defaultWarrantyText     String?
+  defaultTermsText        String?
+  defaultPrivacyText      String?
+  defaultEmailTemplateQuoteSubject String?
+  defaultEmailTemplateQuoteBody    String?
+  defaultEmailTemplateReportSubject String?
+  defaultEmailTemplateReportBody   String?
+  defaultTaxRate          Decimal  @default(22) @db.Decimal(5, 2)
+  showTax                 Boolean  @default(true)
+  currency                String   @default("EUR")
+  locale                  String   @default("it-IT")
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  company                 Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("document_settings")
+}
+
+// App Preferences
+model AppPreferences {
+  id                      String   @id @default(cuid())
+  companyId               String   @unique
+  workflowEnabled         Boolean  @default(true)
+  requireReportOnComplete Boolean  @default(false)
+  enableMaterialsPricing  Boolean  @default(true)
+  defaultUnit             String   @default("pz")
+  dateFormat              String   @default("DD/MM/YYYY")
+  timeTrackingEnabled     Boolean  @default(false)
+  attachmentsEnabled      Boolean  @default(true)
+  maxUploadSizeMB         Int      @default(10)
+  notifyQuoteExpiring     Boolean  @default(true)
+  notifyJobsTomorrow      Boolean  @default(true)
+  notifyMissingReports    Boolean  @default(true)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  company                 Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("app_preferences")
 }
 
 enum JobStatus {
