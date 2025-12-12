@@ -7,6 +7,12 @@ import {
   getJob,
   createJob,
   updateJob,
+  startJob,
+  completeJob,
+  getDashboardStats,
+  getTodayJobs,
+  getUpcomingJobs,
+  getToCloseJobs,
 } from '../controllers/jobController';
 import {
   addJobMaterial,
@@ -31,9 +37,15 @@ router.use(authenticate);
 router.use(enforceSubscriptionStatus);
 
 router.get('/', getJobs);
+router.get('/dashboard/stats', getDashboardStats);
+router.get('/dashboard/today', getTodayJobs);
+router.get('/dashboard/upcoming', getUpcomingJobs);
+router.get('/dashboard/to-close', getToCloseJobs);
 router.get('/:id', getJob);
 router.post('/', checkPlanLimits('jobs'), createJob);
 router.patch('/:id', updateJob);
+router.patch('/:id/start', startJob);
+router.patch('/:id/complete', completeJob);
 
 // Job Materials
 router.post('/:id/materials', addJobMaterial);
