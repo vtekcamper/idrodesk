@@ -34,5 +34,10 @@ export function verifyToken(token: string): JwtPayload {
 }
 
 // Alias per compatibilità
-export const verifyAccessToken = verifyToken;
-export const verifyRefreshToken = verifyToken; 
+export function verifyAccessToken(token: string): JwtPayload {
+  return verifyToken(token);
+}
+
+export function verifyRefreshToken(token: string): JwtPayload {
+  return verifyToken(token);
+} 
