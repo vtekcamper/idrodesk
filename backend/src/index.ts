@@ -6,15 +6,25 @@ import { errorHandler } from './middleware/errorHandler';
 import { requestId } from './middleware/auditLog';
 import { apiRateLimiter, loginRateLimiter } from './middleware/rateLimit';
 
-// Avvia email worker (solo se non in test mode)
-if (process.env.NODE_ENV !== 'test' && process.env.SKIP_EMAIL_WORKER !== 'true') {
+// Avvia workers (solo se non in test mode)
+if (process.env.NODE_ENV !== 'test' && process.env.SKIP_WORKERS !== 'true') {
+  // Email worker
   import('./workers/emailWorker').then(() => {
     console.log('📧 Email worker started');
   }).catch((error) => {
     console.error('Error starting email worker:', error);
-    // Non bloccare il server se Redis non è disponibile
     if (error.message?.includes('ECONNREFUSED')) {
-      console.warn('⚠️  Redis not available, email worker disabled. Emails will be queued but not processed.');
+      console.warn('⚠️  Redis not available, email worker disabled.');
+    }
+  });
+
+  // Data export worker
+  import('./workers/dataExportWorker').then(() => {
+    console.log('📦 Data export worker started');
+  }).catch((error) => {
+    console.error('Error starting data export worker:', error);
+    if (error.message?.includes('ECONNREFUSED')) {
+      console.warn('⚠️  Redis not available, data export worker disabled.');
     }
   });
 }
@@ -29,6 +39,7 @@ import checklistRoutes from './routes/checklistRoutes';
 import userRoutes from './routes/userRoutes';
 import { jobChecklistRouter } from './routes/jobRoutes';
 import adminRoutes from './routes/adminRoutes';
+import companyRoutes from './routes/companyRoutes';
 
 dotenv.config();
 
@@ -69,6 +80,7 @@ app.get('/health', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/company', companyRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/quotes', quoteRoutes);
 app.use('/api/jobs', jobRoutes);

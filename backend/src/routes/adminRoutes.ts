@@ -51,6 +51,13 @@ import {
   sendSubscriptionExpiredEmails,
   sendSubscriptionReminderEmails,
 } from '../jobs/emailTriggers';
+import {
+  hardDeleteExpiredCompanies,
+  cleanupExpiredExports,
+} from '../jobs/hardDeleteJob';
+import {
+  restoreCompany,
+} from '../controllers/gdprController';
 
 const router = Router();
 
@@ -238,6 +245,29 @@ router.post('/jobs/email/subscription-reminder', async (req, res) => {
     res.status(500).json({ error: error.message || 'Errore nell\'invio reminder' });
   }
 });
+
+router.post('/jobs/hard-delete', async (req, res) => {
+  try {
+    const result = await hardDeleteExpiredCompanies();
+    res.json({ success: true, ...result });
+  } catch (error: any) {
+    console.error('Hard delete job error:', error);
+    res.status(500).json({ error: error.message || 'Errore nell\'esecuzione hard delete' });
+  }
+});
+
+router.post('/jobs/cleanup-exports', async (req, res) => {
+  try {
+    const result = await cleanupExpiredExports();
+    res.json({ success: true, ...result });
+  } catch (error: any) {
+    console.error('Cleanup exports job error:', error);
+    res.status(500).json({ error: error.message || 'Errore nella pulizia export' });
+  }
+});
+
+// GDPR Admin
+router.post('/companies/:id/restore', restoreCompany);
 
 export default router;
 

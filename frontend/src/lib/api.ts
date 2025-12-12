@@ -166,3 +166,19 @@ export const usersApi = {
     apiClient.axiosInstance.patch(`/users/${id}`, data),
 };
 
+// Company API (Tenant Admin)
+export const companyApi = {
+  getSettings: () => apiClient.axiosInstance.get('/company/settings'),
+  updateSettings: (data: any) => apiClient.axiosInstance.patch('/company/settings', data),
+  getUsage: () => apiClient.axiosInstance.get('/company/usage'),
+  getBilling: () => apiClient.axiosInstance.get('/company/billing'),
+  getPayments: (params?: { page?: number; limit?: number }) =>
+    apiClient.axiosInstance.get('/company/payments', { params }),
+  requestDataExport: (data: { format?: string; includeTables?: string[] }) =>
+    apiClient.axiosInstance.post('/company/export', data),
+  getDataExports: () => apiClient.axiosInstance.get('/company/exports'),
+  downloadDataExport: (id: string) =>
+    apiClient.axiosInstance.get(`/company/exports/${id}/download`, { responseType: 'blob' }),
+  softDeleteCompany: () => apiClient.axiosInstance.delete('/company/delete'),
+};
+
