@@ -82,6 +82,13 @@ export const getQuote = async (req: Request, res: Response) => {
         items: {
           orderBy: { id: 'asc' },
         },
+        job: {
+          select: {
+            id: true,
+            titolo: true,
+            stato: true,
+          },
+        },
       },
     });
 
