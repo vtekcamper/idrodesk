@@ -24,9 +24,22 @@ router.post('/login', loginSuperAdmin);
 router.post('/super-admins', async (req, res, next) => {
   try {
     const prisma = (await import('../config/database')).default;
-    const superAdminCount = await prisma.user.count({
-      where: { isSuperAdmin: true },
-    });
+    
+    // Prova a contare i super admin, ma se le tabelle non esistono, permetti la creazione
+    let superAdminCount = 0;
+    try {
+      superAdminCount = await prisma.user.count({
+        where: { isSuperAdmin: true },
+      });
+    } catch (error: any) {
+      // Se le tabelle non esistono ancora (errore P2021), permetti la creazione
+      if (error.code === 'P2021' || error.message?.includes('does not exist')) {
+        console.log('Tables do not exist yet, allowing super admin creation');
+        return createSuperAdmin(req, res);
+      }
+      // Altrimenti, rilancia l'errore
+      throw error;
+    }
     
     // Se già esiste un super admin, richiedi autenticazione
     if (superAdminCount > 0) {
