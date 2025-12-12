@@ -4,6 +4,15 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '@/lib/adminApi';
 import AdminLayout from '@/components/AdminLayout';
+import { PageHeader } from '@/components/ui-kit/page-header';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui-kit/card';
+import { Button } from '@/components/ui-kit/button';
+import { Badge } from '@/components/ui-kit/badge';
+import { StatusBadge } from '@/components/ui-kit/status-badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui-kit/table';
+import { Skeleton } from '@/components/ui-kit/skeleton';
+import { EmptyState } from '@/components/ui-kit/empty-state';
+import { AlertTriangle, CreditCard, Calendar, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
@@ -39,184 +48,203 @@ export default function AdminSubscriptionsPage() {
 
   return (
     <AdminLayout>
-      <div className="flex-1 overflow-y-auto">
-        <header className="bg-white shadow-sm border-b">
-          <div className="px-6 py-4">
-            <h1 className="text-2xl font-bold text-gray-900">Gestione Abbonamenti</h1>
-            <p className="text-sm text-gray-600">Monitora e gestisci gli abbonamenti delle aziende</p>
-          </div>
-        </header>
+      <div className="p-6 space-y-6">
+        <PageHeader
+          title="Gestione Abbonamenti"
+          description="Monitora e gestisci gli abbonamenti delle aziende"
+          breadcrumb={[{ label: 'Admin' }, { label: 'Abbonamenti' }]}
+        />
 
-        <main className="p-6">
-          {/* Alert Abbonamenti in Scadenza */}
-          <div className="card bg-yellow-50 border-yellow-200 mb-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-yellow-900 mb-2">
-                  ⚠️ Abbonamenti in Scadenza
-                </h2>
-                <p className="text-sm text-yellow-700">
-                  {loadingExpiring ? 'Caricamento...' : `${expiring?.length || 0} abbonamenti scadono nei prossimi ${daysFilter} giorni`}
-                </p>
+        {/* Alert Abbonamenti in Scadenza */}
+        {expiring && expiring.length > 0 && (
+          <Card className="border-warning bg-warning/10">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-warning" />
+                  <CardTitle>Abbonamenti in Scadenza</CardTitle>
+                </div>
+                <select
+                  className="flex h-10 rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  value={daysFilter}
+                  onChange={(e) => setDaysFilter(Number(e.target.value))}
+                >
+                  <option value={7}>7 giorni</option>
+                  <option value={15}>15 giorni</option>
+                  <option value={30}>30 giorni</option>
+                  <option value={60}>60 giorni</option>
+                </select>
               </div>
-              <select
-                className="input bg-white"
-                value={daysFilter}
-                onChange={(e) => setDaysFilter(Number(e.target.value))}
-              >
-                <option value={7}>7 giorni</option>
-                <option value={15}>15 giorni</option>
-                <option value={30}>30 giorni</option>
-                <option value={60}>60 giorni</option>
-              </select>
-            </div>
-          </div>
+              <CardDescription>
+                {expiring.length} abbonamenti scadono nei prossimi {daysFilter} giorni
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        )}
 
-          {/* Lista Abbonamenti in Scadenza */}
-          {expiring && expiring.length > 0 && (
-            <div className="card mb-6">
-              <h2 className="text-lg font-semibold mb-4">Prossime Scadenze</h2>
+        {/* Lista Abbonamenti in Scadenza */}
+        {expiring && expiring.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Prossime Scadenze</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-gray-100">
-                      <th className="border p-3 text-left">Azienda</th>
-                      <th className="border p-3 text-left">Piano</th>
-                      <th className="border p-3 text-left">Scadenza</th>
-                      <th className="border p-3 text-left">Giorni Rimanenti</th>
-                      <th className="border p-3 text-left">Azioni</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Azienda</TableHead>
+                      <TableHead>Piano</TableHead>
+                      <TableHead>Scadenza</TableHead>
+                      <TableHead>Giorni Rimanenti</TableHead>
+                      <TableHead>Azioni</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {expiring.map((company: any) => {
                       const daysLeft = Math.ceil(
                         (new Date(company.dataScadenza).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
                       );
                       return (
-                        <tr key={company.id} className="hover:bg-gray-50">
-                          <td className="border p-3">
+                        <TableRow key={company.id}>
+                          <TableCell>
                             <Link
                               href={`/admin/companies/${company.id}`}
-                              className="text-primary-600 hover:text-primary-700 font-medium"
+                              className="text-primary hover:underline font-medium"
                             >
                               {company.ragioneSociale}
                             </Link>
-                          </td>
-                          <td className="border p-3">
-                            <span className="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800">
-                              {company.pianoAbbonamento}
-                            </span>
-                          </td>
-                          <td className="border p-3">
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary">{company.pianoAbbonamento}</Badge>
+                          </TableCell>
+                          <TableCell>
                             {new Date(company.dataScadenza).toLocaleDateString('it-IT')}
-                          </td>
-                          <td className="border p-3">
-                            <span className={`px-2 py-1 text-xs rounded font-medium ${
-                              daysLeft <= 7 ? 'bg-red-100 text-red-800' :
-                              daysLeft <= 15 ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-green-100 text-green-800'
-                            }`}>
-                              {daysLeft} giorni
-                            </span>
-                          </td>
-                          <td className="border p-3">
-                            <Link
-                              href={`/admin/companies/${company.id}`}
-                              className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                daysLeft <= 7
+                                  ? 'danger'
+                                  : daysLeft <= 15
+                                  ? 'warning'
+                                  : 'success'
+                              }
                             >
-                              Gestisci →
+                              {daysLeft} giorni
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Link href={`/admin/companies/${company.id}`}>
+                              <Button variant="ghost" size="sm">
+                                Gestisci
+                                <ArrowRight className="h-4 w-4 ml-1" />
+                              </Button>
                             </Link>
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       );
                     })}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
-            </div>
-          )}
+            </CardContent>
+          </Card>
+        )}
 
-          {/* Tutte le Aziende con Abbonamenti */}
-          <div className="card">
-            <h2 className="text-lg font-semibold mb-4">Tutti gli Abbonamenti</h2>
+        {/* Tutte le Aziende con Abbonamenti */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Tutti gli Abbonamenti</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
             {loadingCompanies ? (
-              <p className="text-gray-500 text-center py-8">Caricamento...</p>
+              <div className="p-6 space-y-4">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Skeleton key={i} className="h-16 w-full" />
+                ))}
+              </div>
             ) : companies && companies.length > 0 ? (
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-gray-100">
-                      <th className="border p-3 text-left">Azienda</th>
-                      <th className="border p-3 text-left">Piano</th>
-                      <th className="border p-3 text-left">Stato</th>
-                      <th className="border p-3 text-left">Scadenza</th>
-                      <th className="border p-3 text-left">Utenti</th>
-                      <th className="border p-3 text-left">Azioni</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Azienda</TableHead>
+                      <TableHead>Piano</TableHead>
+                      <TableHead>Stato</TableHead>
+                      <TableHead>Scadenza</TableHead>
+                      <TableHead>Utenti</TableHead>
+                      <TableHead>Azioni</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {companies.map((company: any) => (
-                      <tr key={company.id} className="hover:bg-gray-50">
-                        <td className="border p-3">{company.ragioneSociale}</td>
-                        <td className="border p-3">
-                          <span className="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800">
-                            {company.pianoAbbonamento}
-                          </span>
-                        </td>
-                        <td className="border p-3">
-                          <span className={`px-2 py-1 text-xs rounded ${
-                            company.abbonamentoAttivo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {company.abbonamentoAttivo ? 'Attivo' : 'Inattivo'}
-                          </span>
-                        </td>
-                        <td className="border p-3">
+                      <TableRow key={company.id}>
+                        <TableCell className="font-medium">{company.ragioneSociale}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{company.pianoAbbonamento}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          {company.subscriptionStatus ? (
+                            <StatusBadge status={company.subscriptionStatus} type="subscription" />
+                          ) : (
+                            <Badge variant={company.abbonamentoAttivo ? 'success' : 'danger'}>
+                              {company.abbonamentoAttivo ? 'Attivo' : 'Inattivo'}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
                           {company.dataScadenza ? (
                             new Date(company.dataScadenza).toLocaleDateString('it-IT')
                           ) : (
-                            <span className="text-gray-400">-</span>
+                            <span className="text-muted-foreground">-</span>
                           )}
-                        </td>
-                        <td className="border p-3">{company._count?.users || 0}</td>
-                        <td className="border p-3">
+                        </TableCell>
+                        <TableCell>{company._count?.users || 0}</TableCell>
+                        <TableCell>
                           <div className="flex gap-2">
-                            <Link
-                              href={`/admin/companies/${company.id}`}
-                              className="text-primary-600 hover:text-primary-700 text-sm font-medium"
-                            >
-                              Gestisci
+                            <Link href={`/admin/companies/${company.id}`}>
+                              <Button variant="ghost" size="sm">
+                                Gestisci
+                              </Button>
                             </Link>
-                            <button
+                            <Button
+                              variant="outline"
+                              size="sm"
                               onClick={() => {
-                                if (confirm(`Sei sicuro di ${company.abbonamentoAttivo ? 'disattivare' : 'attivare'} l'abbonamento?`)) {
+                                if (
+                                  confirm(
+                                    `Sei sicuro di ${company.abbonamentoAttivo ? 'disattivare' : 'attivare'} l'abbonamento?`
+                                  )
+                                ) {
                                   toggleSubscriptionMutation.mutate({
                                     id: company.id,
                                     attivo: !company.abbonamentoAttivo,
                                   });
                                 }
                               }}
-                              className={`text-sm font-medium ${
-                                company.abbonamentoAttivo
-                                  ? 'text-red-600 hover:text-red-700'
-                                  : 'text-green-600 hover:text-green-700'
-                              }`}
                             >
                               {company.abbonamentoAttivo ? 'Disattiva' : 'Attiva'}
-                            </button>
+                            </Button>
                           </div>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             ) : (
-              <p className="text-gray-500 text-center py-8">Nessuna azienda trovata</p>
+              <div className="p-6">
+                <EmptyState
+                  icon={<CreditCard className="h-12 w-12" />}
+                  title="Nessuna azienda trovata"
+                  description="Le aziende con abbonamenti appariranno qui"
+                />
+              </div>
             )}
-          </div>
-        </main>
+          </CardContent>
+        </Card>
       </div>
     </AdminLayout>
   );
 }
-
