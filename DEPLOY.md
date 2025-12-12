@@ -240,3 +240,4 @@ Dopo aver ottenuto l'URL Netlify:
 - Netlify Docs: https://docs.netlify.com
 - Next.js Deploy: https://nextjs.org/docs/deployment
 
+

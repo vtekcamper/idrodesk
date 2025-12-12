@@ -113,3 +113,4 @@ Dopo aver ottenuto l'URL Netlify:
 - Controlla la console del browser per errori
 - Verifica che il redirect API in `netlify.toml` sia corretto
 
+

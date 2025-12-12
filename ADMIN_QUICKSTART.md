@@ -63,3 +63,4 @@ I limiti sono in `backend/src/config/planLimits.ts`. Puoi modificarli facilmente
 
 Vedi `ADMIN_GUIDE.md` per la documentazione completa del sistema.
 
+

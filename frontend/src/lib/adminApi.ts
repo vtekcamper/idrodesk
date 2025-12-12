@@ -24,3 +24,4 @@ export const adminApi = {
     apiClient.axiosInstance.post('/admin/login', { email, password }),
 };
 
+

@@ -23,8 +23,8 @@ export default function SetupAdminPage() {
 
   const checkSuperAdmin = async () => {
     try {
-      // Usa l'API URL dal backend (priorità alla variabile d'ambiente, altrimenti URL diretto Railway)
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://idrodesk-production.up.railway.app/api';
+      // Usa il proxy Netlify /api che reindirizza al backend Railway
+      const apiUrl = '/api';
       const response = await fetch(`${apiUrl}/admin/super-admins`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -63,17 +63,20 @@ export default function SetupAdminPage() {
     setError('');
 
     try {
-      // Usa l'API URL dal backend (priorità alla variabile d'ambiente, altrimenti URL diretto Railway)
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://idrodesk-production.up.railway.app/api';
-      console.log('Calling API:', `${apiUrl}/admin/super-admins`);
+      // Usa il proxy Netlify /api che reindirizza al backend Railway
+      const apiUrl = '/api';
+      const endpoint = `${apiUrl}/admin/super-admins`;
+      console.log('Calling API:', endpoint);
+      console.log('Form data:', { ...formData, password: '***' });
       
-      const response = await fetch(`${apiUrl}/admin/super-admins`, {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
       
       console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
       // Controlla se la risposta è HTML (errore)
       const contentType = response.headers.get('content-type');
@@ -91,7 +94,14 @@ export default function SetupAdminPage() {
 
       setStep('success');
     } catch (err: any) {
-      setError(err.message || 'Errore nella creazione super admin');
+      console.error('Setup admin error:', err);
+      if (err.message) {
+        setError(err.message);
+      } else if (err instanceof TypeError && err.message.includes('fetch')) {
+        setError('Impossibile connettersi al server. Verifica che il backend sia online e che Netlify abbia configurato correttamente il redirect a Railway.');
+      } else {
+        setError('Errore nella creazione super admin: ' + String(err));
+      }
     } finally {
       setLoading(false);
     }

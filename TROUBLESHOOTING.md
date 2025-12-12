@@ -189,3 +189,4 @@ Il modo più semplice per creare il super admin è:
 2. Usa il terminale Railway per eseguire lo script
 3. Non serve configurare nulla, funziona direttamente
 
+
