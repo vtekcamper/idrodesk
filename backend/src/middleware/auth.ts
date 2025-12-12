@@ -16,7 +16,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
       userId: payload.userId,
       companyId: payload.companyId,
       role: payload.role as any,
-      email: payload.email,
+      email: payload.email || '',
       isSuperAdmin: payload.isSuperAdmin || false,
     };
     // Super admin può non avere companyId

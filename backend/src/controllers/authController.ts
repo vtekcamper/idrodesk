@@ -171,7 +171,7 @@ export const refresh = async (req: Request, res: Response) => {
     // Se è utente normale, deve avere companyId
     const tokenPayload = {
       userId: user.id,
-      companyId: user.companyId ?? undefined,
+      companyId: user.companyId || undefined,
       role: user.ruolo,
       email: user.email,
       isSuperAdmin: user.isSuperAdmin || false,
