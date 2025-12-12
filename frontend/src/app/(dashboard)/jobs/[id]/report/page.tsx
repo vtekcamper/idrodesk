@@ -171,12 +171,12 @@ export default function JobReportPage() {
     <DashboardLayout>
       <div className="space-y-6 max-w-3xl">
         <PageHeader
-          title={isEditing ? 'Modifica Rapporto' : 'Crea Rapporto Intervento'}
-          description={`Intervento: ${job.titolo}`}
+          title={isEditing ? 'Modifica Scheda Intervento' : 'Scheda Intervento'}
+          description={`Documenta il lavoro svolto per: ${job.titolo}`}
           breadcrumb={[
             { label: 'Interventi', href: '/jobs' },
             { label: job.titolo, href: `/jobs/${jobId}` },
-            { label: isEditing ? 'Modifica Rapporto' : 'Nuovo Rapporto' },
+            { label: isEditing ? 'Modifica Scheda' : 'Nuova Scheda' },
           ]}
         />
 
@@ -193,8 +193,8 @@ export default function JobReportPage() {
           {/* Lavoro Svolto */}
           <Card>
             <CardHeader>
-              <CardTitle>Lavoro Svolto</CardTitle>
-              <CardDescription>Descrivi cosa è stato fatto durante l'intervento</CardDescription>
+              <CardTitle>Cosa è stato fatto</CardTitle>
+              <CardDescription>Descrivi in dettaglio il lavoro svolto durante l'intervento</CardDescription>
             </CardHeader>
             <CardContent>
               <textarea
@@ -214,7 +214,7 @@ export default function JobReportPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:bg-accent">
+                <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:bg-accent transition-colors">
                   <input
                     type="radio"
                     name="esito"
@@ -225,15 +225,15 @@ export default function JobReportPage() {
                   />
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-5 w-5 text-success" />
-                      <span className="font-medium">Risolto</span>
+                      <CheckCircle2 className="h-5 w-5 text-green-600" />
+                      <span className="font-medium">Problema Risolto</span>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Il problema è stato risolto completamente
+                      Il lavoro è stato completato con successo
                     </p>
                   </div>
                 </label>
-                <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:bg-accent">
+                <label className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:bg-accent transition-colors">
                   <input
                     type="radio"
                     name="esito"
@@ -244,11 +244,11 @@ export default function JobReportPage() {
                   />
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <AlertCircle className="h-5 w-5 text-warning" />
-                      <span className="font-medium">Da Tornare</span>
+                      <AlertCircle className="h-5 w-5 text-orange-600" />
+                      <span className="font-medium">Richiede Ritorno</span>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      È necessario un intervento successivo
+                      Serve un secondo intervento per completare
                     </p>
                   </div>
                 </label>
@@ -270,10 +270,10 @@ export default function JobReportPage() {
                     onChange={(e) => setFormData({ ...formData, clientePresente: e.target.checked })}
                     className="h-4 w-4"
                   />
-                  <span className="text-sm font-medium">Cliente presente durante l'intervento</span>
+                  <span className="text-sm font-medium">Cliente presente</span>
                 </label>
                 <p className="text-xs text-muted-foreground ml-6">
-                  Se il cliente era presente, puoi richiedere la firma (funzionalità in arrivo)
+                  Segna se il cliente era presente durante l'intervento
                 </p>
               </div>
 
@@ -304,9 +304,9 @@ export default function JobReportPage() {
           {job.materials && job.materials.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Materiali Utilizzati</CardTitle>
+                <CardTitle>Materiali Usati</CardTitle>
                 <CardDescription>
-                  I materiali già aggiunti all'intervento verranno inclusi nel rapporto
+                  Materiali già registrati per questo intervento
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -327,8 +327,8 @@ export default function JobReportPage() {
           {/* Foto */}
           <Card>
             <CardHeader>
-              <CardTitle>Foto</CardTitle>
-              <CardDescription>Aggiungi foto prima/dopo dell'intervento</CardDescription>
+              <CardTitle>Foto Intervento</CardTitle>
+              <CardDescription>Scatta foto prima, durante e dopo il lavoro</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -378,7 +378,7 @@ export default function JobReportPage() {
               ) : (
                 <>
                   <Save className="h-4 w-4 mr-2" />
-                  {isEditing ? 'Aggiorna Rapporto' : 'Salva Rapporto'}
+                  {isEditing ? 'Salva Modifiche' : 'Salva Scheda'}
                 </>
               )}
             </Button>

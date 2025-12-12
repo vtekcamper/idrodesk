@@ -65,8 +65,8 @@ export default function JobDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['job', jobId] });
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
       queryClient.invalidateQueries({ queryKey: ['jobs', 'dashboard'] });
-      // Proponi creazione rapporto
-      if (confirm('Intervento completato! Vuoi creare il rapporto?')) {
+      // Proponi creazione scheda intervento
+      if (confirm('Intervento completato! Vuoi compilare la scheda intervento?')) {
         router.push(`/jobs/${jobId}/report`);
       }
     },
@@ -111,7 +111,7 @@ export default function JobDetailPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `rapporto-${jobId}.pdf`;
+      a.download = `scheda-intervento-${jobId}.pdf`;
       a.click();
     } catch (error) {
       setError('Errore nel download del PDF');
@@ -400,36 +400,72 @@ export default function JobDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Rapporti (ex Checklist) */}
+            {/* Scheda Intervento */}
             {hasReport && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Rapporti</CardTitle>
+                  <CardTitle>Scheda Intervento</CardTitle>
+                  <CardDescription>Documentazione del lavoro svolto</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {job.checklists.map((jobChecklist: any) => (
-                    <div key={jobChecklist.id} className="mb-4 last:mb-0">
-                      <h3 className="font-semibold mb-3">{jobChecklist.checklist.nome}</h3>
-                      <div className="space-y-2">
-                        {jobChecklist.checklist.items.map((item: any) => {
-                          const response = jobChecklist.responses.find(
-                            (r: any) => r.checklistItemId === item.id
-                          );
-                          return (
-                            <div key={item.id} className="flex items-start gap-2 p-2 rounded-lg">
-                              <input
-                                type="checkbox"
-                                checked={response?.valoreBoolean || false}
-                                disabled
-                                className="mt-1"
-                              />
-                              <label className="text-sm flex-1">{item.descrizione}</label>
+                  {job.checklists
+                    .filter((jc: any) => jc.checklist.nome === 'Rapporto Intervento')
+                    .map((jobChecklist: any) => {
+                      const lavoroResp = jobChecklist.responses.find(
+                        (r: any) => r.checklistItem?.ordine === 1
+                      );
+                      const esitoResp = jobChecklist.responses.find(
+                        (r: any) => r.checklistItem?.ordine === 2
+                      );
+                      const clienteResp = jobChecklist.responses.find(
+                        (r: any) => r.checklistItem?.ordine === 3
+                      );
+                      const tempoResp = jobChecklist.responses.find(
+                        (r: any) => r.checklistItem?.ordine === 4
+                      );
+
+                      return (
+                        <div key={jobChecklist.id} className="space-y-4">
+                          {lavoroResp?.valoreTesto && (
+                            <div>
+                              <p className="text-sm font-medium mb-1">Lavoro svolto:</p>
+                              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                                {lavoroResp.valoreTesto}
+                              </p>
                             </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
+                          )}
+                          <div className="grid grid-cols-2 gap-4">
+                            {esitoResp && (
+                              <div>
+                                <p className="text-sm font-medium mb-1">Esito:</p>
+                                <Badge variant={esitoResp.valoreBoolean ? 'success' : 'warning'}>
+                                  {esitoResp.valoreBoolean ? 'Risolto' : 'Richiede Ritorno'}
+                                </Badge>
+                              </div>
+                            )}
+                            {clienteResp && (
+                              <div>
+                                <p className="text-sm font-medium mb-1">Cliente presente:</p>
+                                <Badge variant={clienteResp.valoreBoolean ? 'default' : 'secondary'}>
+                                  {clienteResp.valoreBoolean ? 'Sì' : 'No'}
+                                </Badge>
+                              </div>
+                            )}
+                            {tempoResp?.valoreNumero && (
+                              <div>
+                                <p className="text-sm font-medium mb-1">Tempo impiegato:</p>
+                                <p className="text-sm">{tempoResp.valoreNumero} minuti</p>
+                              </div>
+                            )}
+                          </div>
+                          <Link href={`/jobs/${jobId}/report`}>
+                            <Button variant="outline" size="sm" className="w-full">
+                              Modifica Scheda
+                            </Button>
+                          </Link>
+                        </div>
+                      );
+                    })}
                 </CardContent>
               </Card>
             )}
@@ -517,7 +553,7 @@ export default function JobDetailPage() {
                   <Link href={`/jobs/${jobId}/report`} className="block">
                     <Button variant="default" className="w-full">
                       <FileText className="h-4 w-4 mr-2" />
-                      Crea Rapporto
+                      Compila Scheda Intervento
                     </Button>
                   </Link>
                 )}

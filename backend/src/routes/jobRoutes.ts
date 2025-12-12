@@ -46,12 +46,9 @@ router.get('/dashboard/stats', getDashboardStats);
 router.get('/dashboard/today', getTodayJobs);
 router.get('/dashboard/upcoming', getUpcomingJobs);
 router.get('/dashboard/to-close', getToCloseJobs);
-router.get('/:id', getJob);
 router.post('/', checkPlanLimits('jobs'), createJob);
-router.patch('/:id', updateJob);
-router.patch('/:id/start', startJob);
-router.patch('/:id/complete', completeJob);
 
+// Routes specifiche PRIMA di /:id per evitare conflitti
 // Job Materials
 router.post('/:id/materials', addJobMaterial);
 router.delete('/:id/materials/:jobMaterialId', deleteJobMaterial);
@@ -68,6 +65,14 @@ router.get('/:id/report', getJobReport);
 router.post('/:id/report', createJobReport);
 router.patch('/:id/report/:reportId', updateJobReport);
 router.get('/:id/report-pdf', generateReportPDF);
+
+// Job actions
+router.patch('/:id/start', startJob);
+router.patch('/:id/complete', completeJob);
+
+// Route generica /:id deve essere ULTIMA
+router.get('/:id', getJob);
+router.patch('/:id', updateJob);
 
 export default router;
 
