@@ -30,6 +30,11 @@ import {
 import {
   generateReportPDF,
 } from '../controllers/reportController';
+import {
+  createJobReport,
+  updateJobReport,
+  getJobReport,
+} from '../controllers/jobReportController';
 
 const router = Router();
 
@@ -59,6 +64,9 @@ router.post('/:id/attachments', upload.single('file'), addAttachment);
 router.get('/:id/attachments', getAttachments);
 
 // Reports
+router.get('/:id/report', getJobReport);
+router.post('/:id/report', createJobReport);
+router.patch('/:id/report/:reportId', updateJobReport);
 router.get('/:id/report-pdf', generateReportPDF);
 
 export default router;

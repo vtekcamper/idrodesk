@@ -145,6 +145,11 @@ export const jobsApi = {
   },
   getAttachments: (jobId: string) =>
     apiClient.axiosInstance.get(`/jobs/${jobId}/attachments`),
+  getReport: (jobId: string) => apiClient.axiosInstance.get(`/jobs/${jobId}/report`),
+  createReport: (jobId: string, data: any) =>
+    apiClient.axiosInstance.post(`/jobs/${jobId}/report`, data),
+  updateReport: (jobId: string, reportId: string, data: any) =>
+    apiClient.axiosInstance.patch(`/jobs/${jobId}/report/${reportId}`, data),
   getReportPDF: (jobId: string) =>
     apiClient.axiosInstance.get(`/jobs/${jobId}/report-pdf`, { responseType: 'blob' }),
 };
