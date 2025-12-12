@@ -210,7 +210,7 @@ router.post('/impersonate/stop', stopImpersonation);
 router.post('/jobs/subscription-state', async (req, res) => {
   try {
     const result = await runSubscriptionStateJob();
-    res.json({ success: true, ...result });
+    res.json({ ...result, success: true });
   } catch (error: any) {
     console.error('Subscription state job error:', error);
     res.status(500).json({ error: error.message || 'Errore nell\'esecuzione job' });
@@ -220,7 +220,7 @@ router.post('/jobs/subscription-state', async (req, res) => {
 router.post('/jobs/email/trial-expiring', async (req, res) => {
   try {
     const result = await sendTrialExpiringEmails();
-    res.json({ success: true, ...result });
+    res.json({ ...result, success: true });
   } catch (error: any) {
     console.error('Trial expiring emails job error:', error);
     res.status(500).json({ error: error.message || 'Errore nell\'invio email trial' });
@@ -230,7 +230,7 @@ router.post('/jobs/email/trial-expiring', async (req, res) => {
 router.post('/jobs/email/subscription-expired', async (req, res) => {
   try {
     const result = await sendSubscriptionExpiredEmails();
-    res.json({ success: true, ...result });
+    res.json({ ...result, success: true });
   } catch (error: any) {
     console.error('Subscription expired emails job error:', error);
     res.status(500).json({ error: error.message || 'Errore nell\'invio email scadenza' });
@@ -240,7 +240,7 @@ router.post('/jobs/email/subscription-expired', async (req, res) => {
 router.post('/jobs/email/subscription-reminder', async (req, res) => {
   try {
     const result = await sendSubscriptionReminderEmails();
-    res.json({ success: true, ...result });
+    res.json({ ...result, success: true });
   } catch (error: any) {
     console.error('Subscription reminder emails job error:', error);
     res.status(500).json({ error: error.message || 'Errore nell\'invio reminder' });
@@ -250,7 +250,7 @@ router.post('/jobs/email/subscription-reminder', async (req, res) => {
 router.post('/jobs/hard-delete', async (req, res) => {
   try {
     const result = await hardDeleteExpiredCompanies();
-    res.json({ success: true, ...result });
+    res.json({ ...result, success: true });
   } catch (error: any) {
     console.error('Hard delete job error:', error);
     res.status(500).json({ error: error.message || 'Errore nell\'esecuzione hard delete' });
@@ -260,7 +260,7 @@ router.post('/jobs/hard-delete', async (req, res) => {
 router.post('/jobs/cleanup-exports', async (req, res) => {
   try {
     const result = await cleanupExpiredExports();
-    res.json({ success: true, ...result });
+    res.json({ ...result, success: true });
   } catch (error: any) {
     console.error('Cleanup exports job error:', error);
     res.status(500).json({ error: error.message || 'Errore nella pulizia export' });

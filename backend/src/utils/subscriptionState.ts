@@ -59,7 +59,7 @@ export function calculateSubscriptionStatus(
  * Aggiorna lo stato di abbonamento di una company
  */
 export async function updateCompanySubscriptionStatus(
-  prisma: any,
+  prisma: any, // PrismaClient type
   companyId: string
 ): Promise<SubscriptionStatus> {
   const company = await prisma.company.findUnique({
@@ -114,7 +114,7 @@ export async function updateAllSubscriptionStatuses(prisma: any) {
     },
   });
 
-  const updates = companies.map((company) => {
+  const updates = companies.map((company: any) => {
     const newStatus = calculateSubscriptionStatus(
       company.dataScadenza,
       company.abbonamentoAttivo,
@@ -132,11 +132,12 @@ export async function updateAllSubscriptionStatuses(prisma: any) {
     return Promise.resolve(null);
   });
 
-  await Promise.all(updates.filter((u) => u !== null));
+  const validUpdates = updates.filter((u: any) => u !== null);
+  await Promise.all(validUpdates);
 
   return {
     total: companies.length,
-    updated: updates.filter((u) => u !== null).length,
+    updated: validUpdates.length,
   };
 }
 
