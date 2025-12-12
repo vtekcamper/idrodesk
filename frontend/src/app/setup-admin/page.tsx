@@ -23,8 +23,8 @@ export default function SetupAdminPage() {
 
   const checkSuperAdmin = async () => {
     try {
-      // Usa l'API URL dal backend (se non è configurato, prova a usare il redirect Netlify)
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
+      // Usa l'API URL dal backend (priorità alla variabile d'ambiente, altrimenti URL diretto Railway)
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://idrodesk-production.up.railway.app/api';
       const response = await fetch(`${apiUrl}/admin/super-admins`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -63,13 +63,17 @@ export default function SetupAdminPage() {
     setError('');
 
     try {
-      // Usa l'API URL dal backend (se non è configurato, prova a usare il redirect Netlify)
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
+      // Usa l'API URL dal backend (priorità alla variabile d'ambiente, altrimenti URL diretto Railway)
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://idrodesk-production.up.railway.app/api';
+      console.log('Calling API:', `${apiUrl}/admin/super-admins`);
+      
       const response = await fetch(`${apiUrl}/admin/super-admins`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
+      
+      console.log('Response status:', response.status);
 
       // Controlla se la risposta è HTML (errore)
       const contentType = response.headers.get('content-type');
