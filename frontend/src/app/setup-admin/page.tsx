@@ -23,8 +23,8 @@ export default function SetupAdminPage() {
 
   const checkSuperAdmin = async () => {
     try {
-      // Usa l'API URL dal backend
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+      // Usa l'API URL dal backend (se non è configurato, prova a usare il redirect Netlify)
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
       const response = await fetch(`${apiUrl}/admin/super-admins`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -35,6 +35,13 @@ export default function SetupAdminPage() {
           password: 'test',
         }),
       });
+
+      // Controlla se la risposta è JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        setStep('form');
+        return;
+      }
 
       const data = await response.json();
       
@@ -56,12 +63,21 @@ export default function SetupAdminPage() {
     setError('');
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+      // Usa l'API URL dal backend (se non è configurato, prova a usare il redirect Netlify)
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
       const response = await fetch(`${apiUrl}/admin/super-admins`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
+
+      // Controlla se la risposta è HTML (errore)
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Response is not JSON:', text.substring(0, 200));
+        throw new Error('Il server ha restituito una risposta non valida. Verifica che NEXT_PUBLIC_API_URL sia configurato correttamente.');
+      }
 
       const data = await response.json();
 
