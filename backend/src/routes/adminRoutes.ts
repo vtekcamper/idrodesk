@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
 import { requireSuperAdmin } from '../middleware/admin';
-import { createSuperAdmin } from '../controllers/adminUserController';
 import {
   getAllCompanies,
   getCompany,
