@@ -60,10 +60,10 @@ export default function AdminSettingsPage() {
   };
 
   const emailStats = {
-    total: emailNotifications?.length || 0,
-    sent: emailNotifications?.filter((e: any) => e.status === 'SENT').length || 0,
-    failed: emailNotifications?.filter((e: any) => e.status === 'FAILED').length || 0,
-    pending: emailNotifications?.filter((e: any) => e.status === 'PENDING').length || 0,
+    total: Array.isArray(emailNotifications) ? emailNotifications.length : 0,
+    sent: Array.isArray(emailNotifications) ? emailNotifications.filter((e: any) => e.status === 'SENT').length : 0,
+    failed: Array.isArray(emailNotifications) ? emailNotifications.filter((e: any) => e.status === 'FAILED').length : 0,
+    pending: Array.isArray(emailNotifications) ? emailNotifications.filter((e: any) => e.status === 'PENDING').length : 0,
   };
 
   return (
@@ -201,7 +201,7 @@ export default function AdminSettingsPage() {
                     <Skeleton key={i} className="h-20 w-full" />
                   ))}
                 </div>
-              ) : emailNotifications && emailNotifications.length > 0 ? (
+              ) : Array.isArray(emailNotifications) && emailNotifications.length > 0 ? (
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {emailNotifications.slice(0, 10).map((email: any) => (
                     <div

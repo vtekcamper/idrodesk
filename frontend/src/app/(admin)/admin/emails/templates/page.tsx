@@ -4,6 +4,14 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { adminApi } from '@/lib/adminApi';
 import AdminLayout from '@/components/AdminLayout';
+import { PageHeader } from '@/components/ui-kit/page-header';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui-kit/card';
+import { Button } from '@/components/ui-kit/button';
+import { Input } from '@/components/ui-kit/input';
+import { Badge } from '@/components/ui-kit/badge';
+import { Skeleton } from '@/components/ui-kit/skeleton';
+import { EmptyState } from '@/components/ui-kit/empty-state';
+import { Mail, Eye, RefreshCw, FileText } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +19,7 @@ export default function AdminEmailTemplatesPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [previewData, setPreviewData] = useState<Record<string, any>>({});
   const [previewHtml, setPreviewHtml] = useState<string>('');
+  const [loadingPreview, setLoadingPreview] = useState(false);
 
   const { data: templates, isLoading } = useQuery({
     queryKey: ['admin', 'email-templates'],
@@ -21,6 +30,7 @@ export default function AdminEmailTemplatesPage() {
   });
 
   const handlePreview = async (templateType: string) => {
+    setLoadingPreview(true);
     try {
       // Dati di esempio per preview
       const sampleData: Record<string, any> = {
@@ -45,149 +55,214 @@ export default function AdminEmailTemplatesPage() {
     } catch (error: any) {
       console.error('Preview error:', error);
       alert(`Errore: ${error.response?.data?.error || error.message}`);
+    } finally {
+      setLoadingPreview(false);
     }
   };
 
-  if (isLoading) {
-    return (
-      <AdminLayout>
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-8">Caricamento...</div>
-        </div>
-      </AdminLayout>
-    );
-  }
-
   return (
     <AdminLayout>
-      <div className="flex-1 overflow-y-auto">
-        <header className="bg-white shadow-sm border-b">
-          <div className="px-6 py-4">
-            <h1 className="text-2xl font-bold text-gray-900">Template Email</h1>
-            <p className="text-sm text-gray-600">Gestisci e visualizza i template email del sistema</p>
-          </div>
-        </header>
+      <div className="p-6 space-y-6">
+        <PageHeader
+          title="Template Email"
+          description="Gestisci e visualizza i template email del sistema"
+          breadcrumb={[{ label: 'Admin' }, { label: 'Template Email' }]}
+        />
 
-        <main className="p-6">
+        {isLoading ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardContent className="p-6">
+                <Skeleton className="h-8 w-3/4 mb-4" />
+                <div className="space-y-3">
+                  {[1, 2, 3, 4].map((i) => (
+                    <Skeleton key={i} className="h-24 w-full" />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <Skeleton className="h-8 w-3/4 mb-4" />
+                <Skeleton className="h-64 w-full" />
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Lista Template */}
-            <div className="card">
-              <h2 className="text-lg font-semibold mb-4">Template Disponibili</h2>
-              <div className="space-y-2">
-                {templates?.map((template: any) => (
-                  <div
-                    key={template.type}
-                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                      selectedTemplate === template.type
-                        ? 'border-primary-500 bg-primary-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                    onClick={() => handlePreview(template.type)}
-                  >
-                    <h3 className="font-semibold">{template.name}</h3>
-                    <p className="text-sm text-gray-600 mt-1">{template.description}</p>
-                    <div className="mt-2">
-                      <p className="text-xs text-gray-500">Variabili:</p>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {template.variables.map((varName: string) => (
-                          <span
-                            key={varName}
-                            className="px-2 py-1 text-xs bg-gray-100 rounded"
-                          >
-                            {varName}
-                          </span>
-                        ))}
+            <Card>
+              <CardHeader>
+                <CardTitle>Template Disponibili</CardTitle>
+                <CardDescription>Seleziona un template per visualizzare l'anteprima</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {Array.isArray(templates) && templates.length > 0 ? (
+                  <div className="space-y-3">
+                    {templates.map((template: any) => (
+                      <div
+                        key={template.type}
+                        className={`p-4 border rounded-xl cursor-pointer transition-all ${
+                          selectedTemplate === template.type
+                            ? 'border-primary bg-primary/5 shadow-sm'
+                            : 'border-border hover:border-primary/50 hover:bg-accent/50'
+                        }`}
+                        onClick={() => handlePreview(template.type)}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <h3 className="font-semibold text-base">{template.name}</h3>
+                          {selectedTemplate === template.type && (
+                            <Badge variant="default">Selezionato</Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-3">{template.description}</p>
+                        {Array.isArray(template.variables) && template.variables.length > 0 && (
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-2">Variabili disponibili:</p>
+                            <div className="flex flex-wrap gap-1">
+                              {template.variables.map((varName: string) => (
+                                <Badge key={varName} variant="outline" className="text-xs">
+                                  {varName}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
+                ) : (
+                  <EmptyState
+                    icon={<FileText className="h-12 w-12" />}
+                    title="Nessun template disponibile"
+                    description="I template email appariranno qui"
+                  />
+                )}
+              </CardContent>
+            </Card>
 
             {/* Preview */}
-            <div className="card">
-              <h2 className="text-lg font-semibold mb-4">Preview</h2>
-              {selectedTemplate ? (
-                <div>
-                  {/* Dati di esempio personalizzabili */}
-                  <div className="mb-4 p-4 bg-gray-50 rounded">
-                    <h3 className="text-sm font-semibold mb-2">Dati di Esempio</h3>
-                    <div className="space-y-2">
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Nome Azienda</label>
-                        <input
-                          type="text"
-                          className="input text-sm"
-                          value={previewData.companyName || 'Esempio Azienda S.r.l.'}
-                          onChange={(e) =>
-                            setPreviewData({ ...previewData, companyName: e.target.value })
-                          }
-                        />
-                      </div>
-                      {selectedTemplate === 'SUBSCRIPTION_EXPIRING' && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Anteprima</CardTitle>
+                <CardDescription>
+                  {selectedTemplate
+                    ? 'Visualizza e personalizza l\'anteprima del template'
+                    : 'Seleziona un template per visualizzare l\'anteprima'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {selectedTemplate ? (
+                  <div className="space-y-4">
+                    {/* Dati di esempio personalizzabili */}
+                    <Card className="bg-muted/50">
+                      <CardHeader>
+                            <CardTitle className="text-base">Dati di Esempio</CardTitle>
+                          </CardHeader>
+                      <CardContent className="space-y-3">
                         <div>
-                          <label className="block text-xs text-gray-600 mb-1">Giorni alla Scadenza</label>
-                          <input
-                            type="number"
-                            className="input text-sm"
-                            value={previewData.daysUntilExpiry || 7}
+                          <label className="block text-sm font-medium mb-2">Nome Azienda</label>
+                          <Input
+                            type="text"
+                            value={previewData.companyName || 'Esempio Azienda S.r.l.'}
                             onChange={(e) =>
-                              setPreviewData({
-                                ...previewData,
-                                daysUntilExpiry: parseInt(e.target.value),
-                              })
+                              setPreviewData({ ...previewData, companyName: e.target.value })
                             }
                           />
                         </div>
-                      )}
-                      {(selectedTemplate === 'PAYMENT_SUCCESS' ||
-                        selectedTemplate === 'PAYMENT_FAILED') && (
-                        <div>
-                          <label className="block text-xs text-gray-600 mb-1">Importo</label>
-                          <input
-                            type="number"
-                            step="0.01"
-                            className="input text-sm"
-                            value={previewData.amount || 29.99}
-                            onChange={(e) =>
-                              setPreviewData({
-                                ...previewData,
-                                amount: parseFloat(e.target.value),
-                              })
-                            }
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => handlePreview(selectedTemplate)}
-                      className="btn btn-primary text-sm mt-2"
-                    >
-                      Aggiorna Preview
-                    </button>
-                  </div>
+                        {selectedTemplate === 'SUBSCRIPTION_EXPIRING' && (
+                          <div>
+                            <label className="block text-sm font-medium mb-2">Giorni alla Scadenza</label>
+                            <Input
+                              type="number"
+                              value={previewData.daysUntilExpiry || 7}
+                              onChange={(e) =>
+                                setPreviewData({
+                                  ...previewData,
+                                  daysUntilExpiry: parseInt(e.target.value) || 7,
+                                })
+                              }
+                            />
+                          </div>
+                        )}
+                        {(selectedTemplate === 'PAYMENT_SUCCESS' ||
+                          selectedTemplate === 'PAYMENT_FAILED') && (
+                          <div>
+                            <label className="block text-sm font-medium mb-2">Importo (€)</label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={previewData.amount || 29.99}
+                              onChange={(e) =>
+                                setPreviewData({
+                                  ...previewData,
+                                  amount: parseFloat(e.target.value) || 29.99,
+                                })
+                              }
+                            />
+                          </div>
+                        )}
+                        <Button
+                          onClick={() => handlePreview(selectedTemplate)}
+                          disabled={loadingPreview}
+                          className="w-full"
+                        >
+                          {loadingPreview ? (
+                            <>
+                              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                              Aggiornamento...
+                            </>
+                          ) : (
+                            <>
+                              <RefreshCw className="h-4 w-4 mr-2" />
+                              Aggiorna Preview
+                            </>
+                          )}
+                        </Button>
+                      </CardContent>
+                    </Card>
 
-                  {/* HTML Preview */}
-                  <div className="border rounded-lg overflow-hidden">
-                    <div className="bg-gray-100 px-4 py-2 text-xs font-semibold">
-                      Anteprima Email
-                    </div>
-                    <div
-                      className="p-4 bg-white"
-                      dangerouslySetInnerHTML={{ __html: previewHtml }}
-                    />
+                    {/* HTML Preview */}
+                    <Card>
+                      <CardHeader>
+                        <div className="flex items-center gap-2">
+                          <Eye className="h-4 w-4" />
+                          <CardTitle className="text-base">Anteprima Email</CardTitle>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-0">
+                        {loadingPreview ? (
+                          <div className="p-8 flex items-center justify-center">
+                            <Skeleton className="h-64 w-full" />
+                          </div>
+                        ) : previewHtml ? (
+                          <div className="border-t">
+                            <div
+                              className="p-6 bg-background"
+                              dangerouslySetInnerHTML={{ __html: previewHtml }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="p-8 text-center text-muted-foreground">
+                            <Mail className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                            <p>Nessuna anteprima disponibile</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
                   </div>
-                </div>
-              ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <p>Seleziona un template per visualizzare l'anteprima</p>
-                </div>
-              )}
-            </div>
+                ) : (
+                  <EmptyState
+                    icon={<Eye className="h-12 w-12" />}
+                    title="Nessun template selezionato"
+                    description="Seleziona un template dalla lista per visualizzare l'anteprima"
+                  />
+                )}
+              </CardContent>
+            </Card>
           </div>
-        </main>
+        )}
       </div>
     </AdminLayout>
   );
 }
-
