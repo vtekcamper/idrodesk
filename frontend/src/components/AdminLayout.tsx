@@ -34,7 +34,17 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { theme, setTheme } = useTheme();
+  
+  // Safe theme hook with fallback
+  let theme: 'dark' | 'light' | 'system' = 'system';
+  let setTheme: (theme: 'dark' | 'light' | 'system') => void = () => {};
+  try {
+    const themeContext = useTheme();
+    theme = themeContext.theme;
+    setTheme = themeContext.setTheme;
+  } catch {
+    // ThemeProvider not available, use default
+  }
 
   useEffect(() => {
     if (!adminAuth.isSuperAdmin()) {

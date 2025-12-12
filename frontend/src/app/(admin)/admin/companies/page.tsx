@@ -4,6 +4,16 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { adminApi } from '@/lib/adminApi';
 import AdminLayout from '@/components/AdminLayout';
+import { PageHeader } from '@/components/ui-kit/page-header';
+import { Card, CardContent } from '@/components/ui-kit/card';
+import { Input } from '@/components/ui-kit/input';
+import { Button } from '@/components/ui-kit/button';
+import { StatusBadge } from '@/components/ui-kit/status-badge';
+import { Badge } from '@/components/ui-kit/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui-kit/table';
+import { Skeleton } from '@/components/ui-kit/skeleton';
+import { EmptyState } from '@/components/ui-kit/empty-state';
+import { Search, Building2, X } from 'lucide-react';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
@@ -23,133 +33,159 @@ export default function AdminCompaniesPage() {
     },
   });
 
+  const hasActiveFilters = filters.search || filters.piano || filters.attivo;
+
+  const clearFilters = () => {
+    setFilters({ search: '', piano: '', attivo: '' });
+  };
+
   return (
     <AdminLayout>
-      <div className="flex-1 overflow-y-auto">
-        <header className="bg-white shadow-sm border-b">
-          <div className="px-6 py-4">
-            <h1 className="text-2xl font-bold text-gray-900">Gestione Aziende</h1>
-            <p className="text-sm text-gray-600">Visualizza e gestisci tutte le aziende registrate</p>
-          </div>
-        </header>
+      <div className="p-6 space-y-6">
+        <PageHeader
+          title="Gestione Aziende"
+          description="Visualizza e gestisci tutte le aziende registrate"
+          breadcrumb={[{ label: 'Admin' }, { label: 'Aziende' }]}
+        />
 
-        <main className="p-6">
         {/* Filters */}
-        <div className="card mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <input
-              type="text"
-              placeholder="Cerca azienda..."
-              className="input"
-              value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-            />
-            <select
-              className="input"
-              value={filters.piano}
-              onChange={(e) => setFilters({ ...filters, piano: e.target.value })}
-            >
-              <option value="">Tutti i piani</option>
-              <option value="BASIC">BASIC</option>
-              <option value="PRO">PRO</option>
-              <option value="ELITE">ELITE</option>
-            </select>
-            <select
-              className="input"
-              value={filters.attivo}
-              onChange={(e) => setFilters({ ...filters, attivo: e.target.value })}
-            >
-              <option value="">Tutti gli stati</option>
-              <option value="true">Attivo</option>
-              <option value="false">Inattivo</option>
-            </select>
-          </div>
-        </div>
+        <Card>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Cerca azienda..."
+                  className="pl-10"
+                  value={filters.search}
+                  onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                />
+              </div>
+              <select
+                className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                value={filters.piano}
+                onChange={(e) => setFilters({ ...filters, piano: e.target.value })}
+              >
+                <option value="">Tutti i piani</option>
+                <option value="BASIC">BASIC</option>
+                <option value="PRO">PRO</option>
+                <option value="ELITE">ELITE</option>
+              </select>
+              <select
+                className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                value={filters.attivo}
+                onChange={(e) => setFilters({ ...filters, attivo: e.target.value })}
+              >
+                <option value="">Tutti gli stati</option>
+                <option value="true">Attivo</option>
+                <option value="false">Inattivo</option>
+              </select>
+              {hasActiveFilters && (
+                <Button variant="outline" onClick={clearFilters} className="w-full">
+                  <X className="h-4 w-4 mr-2" />
+                  Reset
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Companies Table */}
         {isLoading ? (
-          <p className="text-gray-500">Caricamento...</p>
-        ) : companies && companies.length > 0 ? (
-          <div className="card overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border p-2 text-left">Azienda</th>
-                  <th className="border p-2 text-left">P.IVA</th>
-                  <th className="border p-2 text-left">Piano</th>
-                  <th className="border p-2 text-left">Stato</th>
-                  <th className="border p-2 text-left">Utenti</th>
-                  <th className="border p-2 text-left">Clienti</th>
-                  <th className="border p-2 text-left">Lavori</th>
-                  <th className="border p-2 text-left">Uso</th>
-                  <th className="border p-2 text-left">Azioni</th>
-                </tr>
-              </thead>
-              <tbody>
-                {companies.map((company: any) => (
-                  <tr key={company.id} className="hover:bg-gray-50">
-                    <td className="border p-2">{company.ragioneSociale}</td>
-                    <td className="border p-2">{company.piva}</td>
-                    <td className="border p-2">
-                      <span className="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800">
-                        {company.pianoAbbonamento}
-                      </span>
-                    </td>
-                    <td className="border p-2">
-                        {company.subscriptionStatus ? (
-                          <span className={`px-2 py-1 text-xs rounded font-medium ${
-                            company.subscriptionStatus === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-                            company.subscriptionStatus === 'TRIAL' ? 'bg-blue-100 text-blue-800' :
-                            company.subscriptionStatus === 'PAST_DUE' ? 'bg-yellow-100 text-yellow-800' :
-                            company.subscriptionStatus === 'SUSPENDED' ? 'bg-red-100 text-red-800' :
-                            company.subscriptionStatus === 'CANCELED' ? 'bg-gray-100 text-gray-800' :
-                            'bg-gray-200 text-gray-600'
-                          }`}>
-                            {company.subscriptionStatus === 'ACTIVE' ? 'Attivo' :
-                             company.subscriptionStatus === 'TRIAL' ? 'Trial' :
-                             company.subscriptionStatus === 'PAST_DUE' ? 'Scaduto' :
-                             company.subscriptionStatus === 'SUSPENDED' ? 'Sospeso' :
-                             company.subscriptionStatus === 'CANCELED' ? 'Cancellato' :
-                             company.subscriptionStatus}
-                          </span>
-                        ) : (
-                          <span className={`px-2 py-1 text-xs rounded ${
-                            company.abbonamentoAttivo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {company.abbonamentoAttivo ? 'Attivo' : 'Inattivo'}
-                          </span>
-                        )}
-                    </td>
-                    <td className="border p-2">{company._count.users}</td>
-                    <td className="border p-2">{company._count.clients}</td>
-                    <td className="border p-2">{company._count.jobs}</td>
-                    <td className="border p-2">
-                      <div className="text-xs">
-                        <div>Utenti: {company.usage?.users.current}/{company.usage?.users.limit === -1 ? '∞' : company.usage?.users.limit}</div>
-                        <div>Clienti: {company.usage?.clients.current}/{company.usage?.clients.limit === -1 ? '∞' : company.usage?.clients.limit}</div>
-                      </div>
-                    </td>
-                    <td className="border p-2">
-                      <Link
-                        href={`/admin/companies/${company.id}`}
-                        className="text-primary-600 hover:text-primary-700 text-sm"
-                      >
-                        Gestisci
-                      </Link>
-                    </td>
-                  </tr>
+          <Card>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Skeleton key={i} className="h-16 w-full" />
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
+        ) : companies && companies.length > 0 ? (
+          <Card>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Azienda</TableHead>
+                      <TableHead>P.IVA</TableHead>
+                      <TableHead>Piano</TableHead>
+                      <TableHead>Stato</TableHead>
+                      <TableHead>Utenti</TableHead>
+                      <TableHead>Clienti</TableHead>
+                      <TableHead>Lavori</TableHead>
+                      <TableHead>Uso</TableHead>
+                      <TableHead>Azioni</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {companies.map((company: any) => (
+                      <TableRow key={company.id} className="cursor-pointer hover:bg-accent">
+                        <TableCell className="font-medium">{company.ragioneSociale}</TableCell>
+                        <TableCell className="font-mono text-sm">{company.piva}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{company.pianoAbbonamento}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          {company.subscriptionStatus ? (
+                            <StatusBadge status={company.subscriptionStatus} type="subscription" />
+                          ) : (
+                            <Badge variant={company.abbonamentoAttivo ? 'success' : 'danger'}>
+                              {company.abbonamentoAttivo ? 'Attivo' : 'Inattivo'}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>{company._count?.users || 0}</TableCell>
+                        <TableCell>{company._count?.clients || 0}</TableCell>
+                        <TableCell>{company._count?.jobs || 0}</TableCell>
+                        <TableCell>
+                          <div className="text-xs text-muted-foreground">
+                            <div>
+                              Utenti: {company.usage?.users.current || 0}/
+                              {company.usage?.users.limit === -1 ? '∞' : company.usage?.users.limit || 0}
+                            </div>
+                            <div>
+                              Clienti: {company.usage?.clients.current || 0}/
+                              {company.usage?.clients.limit === -1 ? '∞' : company.usage?.clients.limit || 0}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Link href={`/admin/companies/${company.id}`}>
+                            <Button variant="ghost" size="sm">
+                              Gestisci
+                            </Button>
+                          </Link>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
         ) : (
-          <div className="card text-center py-12">
-            <p className="text-gray-500">Nessuna azienda trovata</p>
-          </div>
+          <Card>
+            <CardContent className="p-6">
+              <EmptyState
+                icon={<Building2 className="h-12 w-12" />}
+                title="Nessuna azienda trovata"
+                description={hasActiveFilters ? 'Prova a modificare i filtri di ricerca' : 'Le aziende registrate appariranno qui'}
+                action={
+                  hasActiveFilters
+                    ? {
+                        label: 'Rimuovi filtri',
+                        onClick: clearFilters,
+                      }
+                    : undefined
+                }
+              />
+            </CardContent>
+          </Card>
         )}
-        </main>
       </div>
     </AdminLayout>
   );
 }
-

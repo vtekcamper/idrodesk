@@ -4,6 +4,14 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { materialsApi } from '@/lib/api';
 import DashboardLayout from '@/components/DashboardLayout';
+import { PageHeader } from '@/components/ui-kit/page-header';
+import { Card, CardContent } from '@/components/ui-kit/card';
+import { Input } from '@/components/ui-kit/input';
+import { Button } from '@/components/ui-kit/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui-kit/table';
+import { Skeleton } from '@/components/ui-kit/skeleton';
+import { EmptyState } from '@/components/ui-kit/empty-state';
+import { Search, Package, Plus } from 'lucide-react';
 
 export default function MaterialsPage() {
   const [search, setSearch] = useState('');
@@ -19,60 +27,87 @@ export default function MaterialsPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Materiali</h1>
-            <p className="text-gray-600">Gestisci il tuo magazzino</p>
-          </div>
-          <button className="btn btn-primary">+ Nuovo Materiale</button>
-        </div>
+        <PageHeader
+          title="Materiali"
+          description="Gestisci il tuo magazzino"
+          action={{
+            label: 'Nuovo Materiale',
+            onClick: () => (window.location.href = '/materials/new'),
+          }}
+        />
 
-        <div>
-          <input
-            type="text"
-            placeholder="Cerca materiale..."
-            className="input max-w-md"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+        <Card>
+          <CardContent className="p-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Cerca materiale..."
+                className="pl-10 max-w-md"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         {isLoading ? (
-          <p className="text-gray-500">Caricamento...</p>
-        ) : materials && materials.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border p-2 text-left">Codice</th>
-                  <th className="border p-2 text-left">Descrizione</th>
-                  <th className="border p-2 text-left">Categoria</th>
-                  <th className="border p-2 text-right">Prezzo Vendita</th>
-                  <th className="border p-2 text-right">Giacenza</th>
-                </tr>
-              </thead>
-              <tbody>
-                {materials.map((material: any) => (
-                  <tr key={material.id} className="hover:bg-gray-50">
-                    <td className="border p-2 font-mono">{material.codice}</td>
-                    <td className="border p-2">{material.descrizione}</td>
-                    <td className="border p-2">{material.categoria || '-'}</td>
-                    <td className="border p-2 text-right">
-                      €{Number(material.prezzoVendita).toFixed(2)}
-                    </td>
-                    <td className="border p-2 text-right">{material.giacenza}</td>
-                  </tr>
+          <Card>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Skeleton key={i} className="h-16 w-full" />
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
+        ) : materials && materials.length > 0 ? (
+          <Card>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Codice</TableHead>
+                      <TableHead>Descrizione</TableHead>
+                      <TableHead>Categoria</TableHead>
+                      <TableHead className="text-right">Prezzo Vendita</TableHead>
+                      <TableHead className="text-right">Giacenza</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {materials.map((material: any) => (
+                      <TableRow key={material.id} className="hover:bg-accent">
+                        <TableCell className="font-mono">{material.codice}</TableCell>
+                        <TableCell className="font-medium">{material.descrizione}</TableCell>
+                        <TableCell>{material.categoria || '-'}</TableCell>
+                        <TableCell className="text-right font-medium">
+                          €{Number(material.prezzoVendita).toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-right">{material.giacenza}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
         ) : (
-          <div className="card text-center py-12">
-            <p className="text-gray-500">Nessun materiale trovato</p>
-          </div>
+          <Card>
+            <CardContent className="p-6">
+              <EmptyState
+                icon={<Package className="h-12 w-12" />}
+                title="Nessun materiale trovato"
+                description={search ? 'Prova a modificare la ricerca' : 'Inizia aggiungendo il tuo primo materiale'}
+                action={{
+                  label: 'Aggiungi Materiale',
+                  onClick: () => (window.location.href = '/materials/new'),
+                }}
+              />
+            </CardContent>
+          </Card>
         )}
       </div>
     </DashboardLayout>
   );
 }
-
