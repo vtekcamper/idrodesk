@@ -26,5 +26,5 @@ RUN npm run build
 EXPOSE 3001
 
 # Run migrations and start server
-# Se le migrazioni falliscono, loggiamo l'errore ma avviamo comunque il server
-CMD ["sh", "-c", "npx prisma migrate deploy || echo 'Migration failed, continuing anyway...' && npm start"]
+# Prima prova migrate deploy (se ci sono migrazioni), altrimenti usa db push
+CMD ["sh", "-c", "if [ -d prisma/migrations ] && [ \"$(ls -A prisma/migrations)\" ]; then npx prisma migrate deploy || echo 'Migration failed, trying db push...' && npx prisma db push --accept-data-loss || echo 'db push failed'; else echo 'No migrations found, using db push to create tables...' && npx prisma db push --accept-data-loss || echo 'db push failed'; fi && npm start"]
