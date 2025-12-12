@@ -19,6 +19,32 @@ const router = Router();
 // Public routes (super admin login)
 router.post('/login', loginSuperAdmin);
 
+// Public route per verificare se esiste già un super admin
+router.get('/super-admins/check', async (req, res) => {
+  try {
+    const prisma = (await import('../config/database')).default;
+    
+    let superAdminCount = 0;
+    try {
+      superAdminCount = await prisma.user.count({
+        where: { isSuperAdmin: true },
+      });
+    } catch (error: any) {
+      // Se le tabelle non esistono ancora, non ci sono super admin
+      if (error.code === 'P2021' || error.message?.includes('does not exist')) {
+        return res.json({ exists: false, count: 0 });
+      }
+      throw error;
+    }
+    
+    return res.json({ exists: superAdminCount > 0, count: superAdminCount });
+  } catch (error: any) {
+    console.error('Check super admin error:', error);
+    // In caso di errore, assumiamo che non ci siano super admin
+    return res.json({ exists: false, count: 0 });
+  }
+});
+
 // Public route per creare il primo super admin (solo se non esistono super admin)
 // IMPORTANTE: Rimuovi questa route dopo aver creato il primo super admin per sicurezza!
 router.post('/super-admins', async (req, res, next) => {

@@ -25,34 +25,28 @@ export default function SetupAdminPage() {
     try {
       // Usa il proxy Netlify /api che reindirizza al backend Railway
       const apiUrl = '/api';
-      const response = await fetch(`${apiUrl}/admin/super-admins`, {
-        method: 'POST',
+      const response = await fetch(`${apiUrl}/admin/super-admins/check`, {
+        method: 'GET',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nome: 'test',
-          cognome: 'test',
-          email: 'test@test.com',
-          password: 'test',
-        }),
       });
 
-      // Controlla se la risposta è JSON
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
+      if (!response.ok) {
+        // Se la richiesta fallisce, mostra il form (permetti la creazione)
         setStep('form');
         return;
       }
 
       const data = await response.json();
       
-      // Se l'errore è "Email già esistente" o 401, significa che ci sono già super admin
-      if (response.status === 401 || (data.error && (data.error.includes('già esistente') || data.error.includes('Token richiesto')))) {
+      // Se esiste già un super admin, mostra il messaggio
+      if (data.exists && data.count > 0) {
         setStep('exists');
       } else {
         setStep('form');
       }
     } catch (err) {
-      // Se fallisce, probabilmente non ci sono super admin
+      // Se fallisce, probabilmente non ci sono super admin, mostra il form
+      console.error('Error checking super admin:', err);
       setStep('form');
     }
   };
