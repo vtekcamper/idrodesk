@@ -1,4 +1,5 @@
-import { adminApi, apiClient } from './adminApi';
+import { adminApi } from './adminApi';
+import { apiClient } from './api';
 
 export interface SuperAdmin {
   id: string;
