@@ -104,6 +104,11 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Credenziali non valide' });
     }
 
+    // Utenti normali devono avere una company
+    if (!user.company) {
+      return res.status(401).json({ error: 'Utente non associato ad alcuna azienda' });
+    }
+
     const isValid = await comparePassword(password, user.passwordHash);
 
     if (!isValid) {
@@ -112,9 +117,10 @@ export const login = async (req: Request, res: Response) => {
 
     const tokenPayload = {
       userId: user.id,
-      companyId: user.companyId,
+      companyId: user.companyId || undefined,
       role: user.ruolo,
       email: user.email,
+      isSuperAdmin: user.isSuperAdmin || false,
     };
 
     const accessToken = generateAccessToken(tokenPayload);
@@ -161,11 +167,14 @@ export const refresh = async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Utente non valido' });
     }
 
+    // Se è super admin, companyId può essere null
+    // Se è utente normale, deve avere companyId
     const tokenPayload = {
       userId: user.id,
-      companyId: user.companyId,
+      companyId: user.companyId ?? undefined,
       role: user.ruolo,
       email: user.email,
+      isSuperAdmin: user.isSuperAdmin || false,
     };
 
     const newAccessToken = generateAccessToken(tokenPayload);
