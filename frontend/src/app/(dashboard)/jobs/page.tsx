@@ -39,10 +39,10 @@ export default function JobsPage() {
     <DashboardLayout>
       <div className="space-y-6">
         <PageHeader
-          title="Lavori"
+          title="Interventi"
           description="Gestisci i tuoi interventi"
           action={{
-            label: 'Nuovo Lavoro',
+            label: 'Nuovo Intervento',
             onClick: () => (window.location.href = '/jobs/new'),
           }}
         />

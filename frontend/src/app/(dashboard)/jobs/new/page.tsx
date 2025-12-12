@@ -19,8 +19,17 @@ export default function NewJobPage() {
   const [error, setError] = useState('');
   const [showNewClientForm, setShowNewClientForm] = useState(false);
 
+  // Pre-seleziona cliente se passato come query param
+  const getInitialClientId = () => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('clientId') || '';
+    }
+    return '';
+  };
+
   const [formData, setFormData] = useState({
-    clientId: '',
+    clientId: getInitialClientId(),
     titolo: '',
     descrizione: '',
     dataProgrammata: '',

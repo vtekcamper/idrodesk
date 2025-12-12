@@ -10,7 +10,7 @@ import { Button } from '@/components/ui-kit/button';
 import { Input } from '@/components/ui-kit/input';
 import { Skeleton } from '@/components/ui-kit/skeleton';
 import { AlertCircle, Loader2, Save, Camera, CheckCircle2 } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 export default function JobReportPage() {
   const params = useParams();
@@ -55,7 +55,7 @@ export default function JobReportPage() {
   });
 
   // Popola form se rapporto esiste
-  useState(() => {
+  useEffect(() => {
     if (existingReport && existingReport.responses) {
       const responses = existingReport.responses;
       const lavoroResp = responses.find((r: any) => r.checklistItem.ordine === 1);
@@ -71,7 +71,7 @@ export default function JobReportPage() {
         note: '',
       });
     }
-  });
+  }, [existingReport]);
 
   const createReportMutation = useMutation({
     mutationFn: (data: any) => jobsApi.createReport(jobId, data),
