@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { adminApi } from '@/lib/adminApi';
 import { adminAuth } from '@/lib/adminAuth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+
+export const dynamic = 'force-dynamic';
 
 export default function AdminCompaniesPage() {
   const router = useRouter();
@@ -15,16 +17,22 @@ export default function AdminCompaniesPage() {
     attivo: '',
   });
 
+  useEffect(() => {
+    if (!adminAuth.isSuperAdmin()) {
+      router.push('/admin/login');
+    }
+  }, [router]);
+
   const { data: companies, isLoading } = useQuery({
     queryKey: ['admin', 'companies', filters],
     queryFn: async () => {
       const response = await adminApi.getAllCompanies(filters);
       return response.data;
     },
+    enabled: adminAuth.isSuperAdmin(),
   });
 
   if (!adminAuth.isSuperAdmin()) {
-    router.push('/admin/login');
     return null;
   }
 

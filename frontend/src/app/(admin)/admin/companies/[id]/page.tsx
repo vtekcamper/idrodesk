@@ -1,6 +1,8 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
+
+export const dynamic = 'force-dynamic';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '@/lib/adminApi';
 import { adminAuth } from '@/lib/adminAuth';
