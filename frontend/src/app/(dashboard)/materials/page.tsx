@@ -10,7 +10,10 @@ export default function MaterialsPage() {
 
   const { data: materials, isLoading } = useQuery({
     queryKey: ['materials', search],
-    queryFn: () => materialsApi.getAll({ search }),
+    queryFn: async () => {
+      const response = await materialsApi.getAll({ search });
+      return response.data;
+    },
   });
 
   return (

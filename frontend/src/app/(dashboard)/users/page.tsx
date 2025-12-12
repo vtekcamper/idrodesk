@@ -21,7 +21,10 @@ export default function UsersPage() {
 
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
-    queryFn: () => usersApi.getAll(),
+    queryFn: async () => {
+      const response = await usersApi.getAll();
+      return response.data;
+    },
   });
 
   return (

@@ -74,6 +74,11 @@ class ApiClient {
 
 export const apiClient = new ApiClient();
 
+// Helper per estrarre i dati dalla risposta axios
+export const extractData = <T>(response: any): T => {
+  return response.data;
+};
+
 // Auth API
 export const authApi = {
   registerCompany: (data: any) => apiClient.axiosInstance.post('/auth/register-company', data),

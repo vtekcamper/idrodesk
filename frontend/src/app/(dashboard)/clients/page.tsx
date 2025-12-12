@@ -11,7 +11,10 @@ export default function ClientsPage() {
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ['clients', search],
-    queryFn: () => clientsApi.getAll({ search }),
+    queryFn: async () => {
+      const response = await clientsApi.getAll({ search });
+      return response.data;
+    },
   });
 
   return (

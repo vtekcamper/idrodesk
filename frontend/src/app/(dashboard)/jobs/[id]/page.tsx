@@ -15,7 +15,10 @@ export default function JobDetailPage() {
 
   const { data: job, isLoading } = useQuery({
     queryKey: ['job', jobId],
-    queryFn: () => jobsApi.getById(jobId),
+    queryFn: async () => {
+      const response = await jobsApi.getById(jobId);
+      return response.data;
+    },
   });
 
   const updateJobMutation = useMutation({

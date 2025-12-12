@@ -10,17 +10,26 @@ export default function DashboardPage() {
 
   const { data: jobsToday, isLoading: loadingToday } = useQuery({
     queryKey: ['jobs', 'today', today],
-    queryFn: () => jobsApi.getAll({ data: today }),
+    queryFn: async () => {
+      const response = await jobsApi.getAll({ data: today });
+      return response.data;
+    },
   });
 
   const { data: jobsUpcoming, isLoading: loadingUpcoming } = useQuery({
     queryKey: ['jobs', 'upcoming'],
-    queryFn: () => jobsApi.getAll({ stato: 'PIANIFICATO' }),
+    queryFn: async () => {
+      const response = await jobsApi.getAll({ stato: 'PIANIFICATO' });
+      return response.data;
+    },
   });
 
   const { data: jobsInProgress, isLoading: loadingInProgress } = useQuery({
     queryKey: ['jobs', 'in-progress'],
-    queryFn: () => jobsApi.getAll({ stato: 'IN_CORSO' }),
+    queryFn: async () => {
+      const response = await jobsApi.getAll({ stato: 'IN_CORSO' });
+      return response.data;
+    },
   });
 
   return (

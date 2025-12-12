@@ -8,7 +8,10 @@ import DashboardLayout from '@/components/DashboardLayout';
 export default function ChecklistsPage() {
   const { data: checklists, isLoading } = useQuery({
     queryKey: ['checklists'],
-    queryFn: () => checklistsApi.getAll(),
+    queryFn: async () => {
+      const response = await checklistsApi.getAll();
+      return response.data;
+    },
   });
 
   return (

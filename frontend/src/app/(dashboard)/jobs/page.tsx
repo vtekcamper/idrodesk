@@ -14,7 +14,10 @@ export default function JobsPage() {
 
   const { data: jobs, isLoading } = useQuery({
     queryKey: ['jobs', filters],
-    queryFn: () => jobsApi.getAll(filters),
+    queryFn: async () => {
+      const response = await jobsApi.getAll(filters);
+      return response.data;
+    },
   });
 
   return (

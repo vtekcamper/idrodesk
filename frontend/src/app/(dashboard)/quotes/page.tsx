@@ -13,7 +13,10 @@ export default function QuotesPage() {
 
   const { data: quotes, isLoading } = useQuery({
     queryKey: ['quotes', filters],
-    queryFn: () => quotesApi.getAll(filters),
+    queryFn: async () => {
+      const response = await quotesApi.getAll(filters);
+      return response.data;
+    },
   });
 
   return (
