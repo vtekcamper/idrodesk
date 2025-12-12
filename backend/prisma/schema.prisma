@@ -20,7 +20,9 @@ model Company {
   logoUrl           String?
   pianoAbbonamento  PianoAbbonamento @default(BASIC)
   abbonamentoAttivo Boolean   @default(true)
+  subscriptionStatus SubscriptionStatus @default(TRIAL)
   dataScadenza      DateTime?
+  deletedAt         DateTime? // Soft delete per GDPR
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -33,7 +35,12 @@ model Company {
   subscriptionHistory SubscriptionHistory[]
   payments           Payment[]
   emailNotifications EmailNotification[]
+  auditLogs         AuditLog[]
+  dataExports       DataExport[]
+  refreshTokens     RefreshToken[]
 
+  @@index([subscriptionStatus])
+  @@index([deletedAt])
   @@map("companies")
 }
 
@@ -41,6 +48,15 @@ enum PianoAbbonamento {
   BASIC
   PRO
   ELITE
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  SUSPENDED
+  CANCELED
+  DELETED
 }
 
 model User {
@@ -60,6 +76,9 @@ model User {
   jobsAssegnati Job[]     @relation("JobAssegnatoA")
   jobChecklists JobChecklist[]
   attachments   JobAttachment[]
+  auditLogs     AuditLog[] @relation("UserAuditLogs")
+  passwordResetTokens PasswordResetToken[]
+  refreshTokens RefreshToken[]
 
   @@unique([email])
   @@unique([companyId, email])
@@ -428,5 +447,150 @@ enum EmailStatus {
   PENDING
   SENT
   FAILED
+}
+
+// ============================================
+// AUDIT & SECURITY MODELS
+// ============================================
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorType   String   // "SUPER_ADMIN" | "USER" | "SYSTEM"
+  actorId     String?
+  companyId   String?
+  action      String   // "LOGIN", "IMPERSONATE", "CHANGE_PLAN", "DELETE", "EXPORT", etc.
+  entity      String   // "Company", "User", "Payment", etc.
+  entityId    String?
+  metadata    Json?    // { before: {...}, after: {...}, details: {...} }
+  ip          String?
+  userAgent   String?
+  requestId   String?
+  createdAt   DateTime @default(now())
+
+  company     Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  actor       User?    @relation("UserAuditLogs", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId])
+  @@index([companyId])
+  @@index([action])
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model StripeEvent {
+  id          String   @id // Stripe event ID
+  eventType   String
+  processed   Boolean  @default(false)
+  processedAt DateTime?
+  error       String?
+  metadata    Json?    // Event data snapshot
+  createdAt   DateTime @default(now())
+
+  @@unique([id])
+  @@index([eventType])
+  @@index([processed])
+  @@map("stripe_events")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  companyId String?
+  token     String   @unique
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  revokedAt DateTime?
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  usedAt    DateTime?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+}
+
+model DataExport {
+  id          String   @id @default(cuid())
+  companyId   String
+  requestedBy String   // User ID che ha richiesto l'export
+  format      String   // "CSV" | "JSON" | "ZIP"
+  status      ExportStatus @default(PENDING)
+  fileUrl     String?
+  expiresAt   DateTime? // Link download scade dopo X giorni
+  error       String?
+  metadata    Json?    // Dettagli export (tabelle incluse, date range, etc.)
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("data_exports")
+}
+
+enum ExportStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  EXPIRED
+}
+
+model JobQueue {
+  id          String   @id @default(cuid())
+  jobType     String   // "EMAIL", "EXPORT", "CLEANUP", etc.
+  companyId   String?
+  userId      String?
+  status      JobStatus @default(PENDING)
+  priority    Int      @default(0)
+  payload     Json?    // Job data
+  result      Json?    // Job result
+  error       String?
+  attempts    Int      @default(0)
+  maxAttempts Int     @default(3)
+  scheduledAt DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([jobType])
+  @@index([status])
+  @@index([companyId])
+  @@index([scheduledAt])
+  @@map("job_queue")
+}
+
+enum JobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
 }
 

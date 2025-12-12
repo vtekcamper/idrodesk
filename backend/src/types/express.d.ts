@@ -11,6 +11,8 @@ declare global {
         isSuperAdmin?: boolean;
       };
       companyId?: string;
+      requestId?: string;
+      skipAudit?: boolean;
     }
   }
 }
