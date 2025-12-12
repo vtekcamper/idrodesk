@@ -8,6 +8,11 @@ async function getOrCreateReportChecklist(companyId: string) {
       companyId,
       nome: 'Rapporto Intervento',
     },
+    include: {
+      items: {
+        orderBy: { ordine: 'asc' },
+      },
+    },
   });
 
   if (!checklist) {
@@ -44,7 +49,9 @@ async function getOrCreateReportChecklist(companyId: string) {
         },
       },
       include: {
-        items: true,
+        items: {
+          orderBy: { ordine: 'asc' },
+        },
       },
     });
   }
@@ -99,22 +106,22 @@ export const createJobReport = async (req: Request, res: Response) => {
           create: [
             // Lavoro svolto
             {
-              checklistItemId: checklist.items.find((i) => i.ordine === 1)!.id,
+              checklistItemId: checklist.items.find((i: any) => i.ordine === 1)!.id,
               valoreTesto: lavoroSvolto || '',
             },
             // Esito
             {
-              checklistItemId: checklist.items.find((i) => i.ordine === 2)!.id,
+              checklistItemId: checklist.items.find((i: any) => i.ordine === 2)!.id,
               valoreBoolean: esito === 'RISOLTO',
             },
             // Cliente presente
             {
-              checklistItemId: checklist.items.find((i) => i.ordine === 3)!.id,
+              checklistItemId: checklist.items.find((i: any) => i.ordine === 3)!.id,
               valoreBoolean: clientePresente || false,
             },
             // Tempo impiegato
             {
-              checklistItemId: checklist.items.find((i) => i.ordine === 4)!.id,
+              checklistItemId: checklist.items.find((i: any) => i.ordine === 4)!.id,
               valoreNumero: tempoImpiegato ? parseFloat(tempoImpiegato) : null,
             },
           ],
@@ -174,10 +181,10 @@ export const updateJobReport = async (req: Request, res: Response) => {
 
     // Aggiorna risposte
     const items = jobChecklist.checklist.items;
-    const lavoroItem = items.find((i) => i.ordine === 1)!;
-    const esitoItem = items.find((i) => i.ordine === 2)!;
-    const clienteItem = items.find((i) => i.ordine === 3)!;
-    const tempoItem = items.find((i) => i.ordine === 4)!;
+    const lavoroItem = items.find((i: any) => i.ordine === 1)!;
+    const esitoItem = items.find((i: any) => i.ordine === 2)!;
+    const clienteItem = items.find((i: any) => i.ordine === 3)!;
+    const tempoItem = items.find((i: any) => i.ordine === 4)!;
 
     // Elimina risposte esistenti
     await prisma.jobChecklistResponse.deleteMany({

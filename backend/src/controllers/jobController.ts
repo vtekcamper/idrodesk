@@ -586,7 +586,7 @@ export const getToCloseJobs = async (req: Request, res: Response) => {
           },
         },
       },
-      orderBy: { updatedAt: 'desc' },
+      orderBy: { data: 'desc' },
       take: 10,
     });
 
