@@ -119,6 +119,13 @@ export const jobsApi = {
   create: (data: any) => apiClient.axiosInstance.post('/jobs', data),
   update: (id: string, data: any) =>
     apiClient.axiosInstance.patch(`/jobs/${id}`, data),
+  start: (id: string) => apiClient.axiosInstance.patch(`/jobs/${id}/start`),
+  complete: (id: string) => apiClient.axiosInstance.patch(`/jobs/${id}/complete`),
+  // Dashboard endpoints
+  getDashboardStats: () => apiClient.axiosInstance.get('/jobs/dashboard/stats'),
+  getToday: () => apiClient.axiosInstance.get('/jobs/dashboard/today'),
+  getUpcoming: () => apiClient.axiosInstance.get('/jobs/dashboard/upcoming'),
+  getToClose: () => apiClient.axiosInstance.get('/jobs/dashboard/to-close'),
   addMaterial: (jobId: string, data: any) =>
     apiClient.axiosInstance.post(`/jobs/${jobId}/materials`, data),
   deleteMaterial: (jobId: string, materialId: string) =>

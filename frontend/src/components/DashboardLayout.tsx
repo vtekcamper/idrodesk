@@ -35,11 +35,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/jobs', label: 'Lavori', icon: Wrench },
+    { href: '/jobs', label: 'Interventi', icon: Wrench },
     { href: '/quotes', label: 'Preventivi', icon: FileText },
     { href: '/clients', label: 'Clienti', icon: Users },
     { href: '/materials', label: 'Materiali', icon: Package },
-    { href: '/checklists', label: 'Checklist', icon: CheckSquare },
+    { href: '/checklists', label: 'Rapporti', icon: CheckSquare },
   ];
 
   if (user?.ruolo === 'OWNER') {
