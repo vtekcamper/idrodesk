@@ -14,9 +14,10 @@ export interface JwtPayload {
 }
 
 export function signToken(payload: JwtPayload, expiresIn?: string | number): string {
-  const finalExpiresIn: string | number = expiresIn || JWT_EXPIRES_IN;
+  const finalExpiresIn = expiresIn || JWT_EXPIRES_IN;
+  // expiresIn accetta string o number, ma TypeScript richiede un cast esplicito
   const options: SignOptions = {
-    expiresIn: finalExpiresIn,
+    expiresIn: finalExpiresIn as string | number,
   };
   return jwt.sign(payload, JWT_SECRET, options);
 }
