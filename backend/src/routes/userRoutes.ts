@@ -1,12 +1,14 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
 import { checkPlanLimits } from '../middleware/planLimits';
+import { enforceSubscriptionStatus } from '../middleware/subscriptionEnforcement';
 import prisma from '../config/database';
 import { hashPassword } from '../utils/password';
 
 const router = Router();
 
 router.use(authenticate);
+router.use(enforceSubscriptionStatus);
 // Solo OWNER o super admin possono gestire utenti
 router.use((req, res, next) => {
   if (req.user?.isSuperAdmin || req.user?.role === 'OWNER') {

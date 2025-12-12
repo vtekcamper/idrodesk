@@ -13,12 +13,11 @@ export interface JwtPayload {
   impersonatedBy?: string;
 }
 
-export function signToken(payload: JwtPayload, expiresIn?: string): string {
-  const finalExpiresIn = expiresIn || JWT_EXPIRES_IN;
-  // expiresIn può essere string o number secondo jsonwebtoken
+export function signToken(payload: JwtPayload, expiresIn?: string | number): string {
+  const finalExpiresIn: string | number = expiresIn || JWT_EXPIRES_IN;
   const options: SignOptions = {
     expiresIn: finalExpiresIn,
-  } as SignOptions;
+  };
   return jwt.sign(payload, JWT_SECRET, options);
 }
 

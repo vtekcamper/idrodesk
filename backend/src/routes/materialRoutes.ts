@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
+import { enforceSubscriptionStatus } from '../middleware/subscriptionEnforcement';
 import {
   getMaterials,
   createMaterial,
@@ -9,6 +10,7 @@ import {
 const router = Router();
 
 router.use(authenticate);
+router.use(enforceSubscriptionStatus);
 
 router.get('/', getMaterials);
 router.post('/', createMaterial);

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
 import { checkPlanLimits } from '../middleware/planLimits';
+import { enforceSubscriptionStatus } from '../middleware/subscriptionEnforcement';
 import {
   getJobs,
   getJob,
@@ -27,6 +28,7 @@ import {
 const router = Router();
 
 router.use(authenticate);
+router.use(enforceSubscriptionStatus);
 
 router.get('/', getJobs);
 router.get('/:id', getJob);
@@ -52,5 +54,6 @@ export default router;
 // Export per le route delle checklist (separate)
 export const jobChecklistRouter = Router();
 jobChecklistRouter.use(authenticate);
+jobChecklistRouter.use(enforceSubscriptionStatus);
 jobChecklistRouter.post('/:id/responses', saveChecklistResponses);
 

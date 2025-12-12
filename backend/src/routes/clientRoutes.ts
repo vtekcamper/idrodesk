@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
 import { checkPlanLimits } from '../middleware/planLimits';
+import { enforceSubscriptionStatus } from '../middleware/subscriptionEnforcement';
 import {
   getClients,
   getClient,
@@ -11,6 +12,7 @@ import {
 const router = Router();
 
 router.use(authenticate);
+router.use(enforceSubscriptionStatus);
 
 router.get('/', getClients);
 router.get('/:id', getClient);
