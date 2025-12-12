@@ -13,7 +13,7 @@ export default function SettingsPage() {
   const { data: settings, isLoading: loadingSettings } = useQuery({
     queryKey: ['company', 'settings'],
     queryFn: async () => {
-      const response = await companyApi.getSettings();
+      const response = await companyApi.getAllSettings();
       return response.data;
     },
   });
@@ -55,7 +55,7 @@ export default function SettingsPage() {
   });
 
   const updateSettingsMutation = useMutation({
-    mutationFn: (data: any) => companyApi.updateSettings(data),
+    mutationFn: (data: any) => companyApi.updateCompanySettings(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['company', 'settings'] });
       alert('Impostazioni aggiornate con successo');
