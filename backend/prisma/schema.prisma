@@ -59,6 +59,7 @@ model User {
   jobChecklists JobChecklist[]
   attachments   JobAttachment[]
 
+  @@unique([email])
   @@unique([companyId, email])
   @@map("users")
 }
