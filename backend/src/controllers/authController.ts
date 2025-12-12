@@ -347,7 +347,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
  */
 export const changePassword = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     if (!userId) {
       return res.status(401).json({ error: 'Non autenticato' });
     }

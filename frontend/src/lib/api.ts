@@ -86,6 +86,8 @@ export const authApi = {
     apiClient.axiosInstance.post('/auth/login', data),
   refresh: (refreshToken: string) =>
     apiClient.axiosInstance.post('/auth/refresh', { refreshToken }),
+  changePassword: (data: { currentPassword: string; newPassword: string }) =>
+    apiClient.axiosInstance.post('/auth/change-password', data),
 };
 
 // Clients API
@@ -176,6 +178,7 @@ export const usersApi = {
   create: (data: any) => apiClient.axiosInstance.post('/users', data),
   update: (id: string, data: any) =>
     apiClient.axiosInstance.patch(`/users/${id}`, data),
+  resetPassword: (id: string) => apiClient.axiosInstance.post(`/users/${id}/reset-password`),
 };
 
 // Company API (Tenant Admin)
@@ -204,20 +207,5 @@ export const companyApi = {
   downloadDataExport: (id: string) =>
     apiClient.axiosInstance.get(`/company/exports/${id}/download`, { responseType: 'blob' }),
   softDeleteCompany: () => apiClient.axiosInstance.delete('/company/delete'),
-};
-
-// Auth API
-export const authApi = {
-  changePassword: (data: { currentPassword: string; newPassword: string }) =>
-    apiClient.axiosInstance.post('/auth/change-password', data),
-};
-
-// Users API (esteso)
-export const usersApi = {
-  getAll: () => apiClient.axiosInstance.get('/users'),
-  create: (data: any) => apiClient.axiosInstance.post('/users', data),
-  update: (id: string, data: any) =>
-    apiClient.axiosInstance.patch(`/users/${id}`, data),
-  resetPassword: (id: string) => apiClient.axiosInstance.post(`/users/${id}/reset-password`),
 };
 
