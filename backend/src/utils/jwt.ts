@@ -16,8 +16,9 @@ export interface JwtPayload {
 export function signToken(payload: JwtPayload, expiresIn?: string | number): string {
   const finalExpiresIn = expiresIn || JWT_EXPIRES_IN;
   // expiresIn accetta string o number, ma TypeScript richiede un cast esplicito
-  const options: SignOptions = {
-    expiresIn: finalExpiresIn as string | number,
+  // Usiamo Partial<SignOptions> per evitare errori di tipo
+  const options: Partial<SignOptions> = {
+    expiresIn: finalExpiresIn as any,
   };
   return jwt.sign(payload, JWT_SECRET, options);
 }
