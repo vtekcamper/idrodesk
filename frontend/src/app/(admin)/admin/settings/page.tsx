@@ -1,9 +1,27 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '@/lib/adminApi';
 import AdminLayout from '@/components/AdminLayout';
+import { PageHeader } from '@/components/ui-kit/page-header';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui-kit/card';
+import { Button } from '@/components/ui-kit/button';
+import { Input } from '@/components/ui-kit/input';
+import { Badge } from '@/components/ui-kit/badge';
+import { Skeleton } from '@/components/ui-kit/skeleton';
+import { EmptyState } from '@/components/ui-kit/empty-state';
+import {
+  Mail,
+  Send,
+  Inbox,
+  Settings,
+  Info,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Loader2,
+} from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,22 +33,6 @@ export default function AdminSettingsPage() {
     body: '',
     type: 'CUSTOM',
   });
-  const [systemInfo, setSystemInfo] = useState({
-    stripeConfigured: false,
-    smtpConfigured: false,
-    environment: 'production',
-    database: 'PostgreSQL',
-  });
-
-  useEffect(() => {
-    // Verifica configurazione
-    setSystemInfo({
-      stripeConfigured: !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
-      smtpConfigured: true, // Assumiamo sempre configurato se la pagina carica
-      environment: process.env.NODE_ENV || 'production',
-      database: 'PostgreSQL (Railway)',
-    });
-  }, []);
 
   const { data: emailNotifications, isLoading: loadingEmails } = useQuery({
     queryKey: ['admin', 'emails'],
@@ -66,30 +68,31 @@ export default function AdminSettingsPage() {
 
   return (
     <AdminLayout>
-      <div className="flex-1 overflow-y-auto bg-gray-50">
-        <header className="bg-white shadow-sm border-b">
-          <div className="px-6 py-4">
-            <h1 className="text-2xl font-bold text-gray-900">Impostazioni Sistema</h1>
-            <p className="text-sm text-gray-600">Configurazione e gestione sistema</p>
-          </div>
-        </header>
+      <div className="p-6 space-y-6">
+        <PageHeader
+          title="Impostazioni Sistema"
+          description="Configurazione e gestione sistema"
+          breadcrumb={[{ label: 'Admin' }, { label: 'Impostazioni' }]}
+        />
 
-        <main className="p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Invia Email */}
-            <div className="card">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-2xl">📧</span>
-                <h2 className="text-lg font-semibold">Invia Email</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Invia Email */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                <CardTitle>Invia Email</CardTitle>
               </div>
+              <CardDescription>Invia email personalizzate agli utenti</CardDescription>
+            </CardHeader>
+            <CardContent>
               <form onSubmit={handleSendEmail} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Destinatario <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium mb-2">
+                    Destinatario <span className="text-destructive">*</span>
                   </label>
-                  <input
+                  <Input
                     type="email"
-                    className="input"
                     value={emailData.to}
                     onChange={(e) => setEmailData({ ...emailData, to: e.target.value })}
                     placeholder="esempio@email.com"
@@ -97,12 +100,11 @@ export default function AdminSettingsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Oggetto <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium mb-2">
+                    Oggetto <span className="text-destructive">*</span>
                   </label>
-                  <input
+                  <Input
                     type="text"
-                    className="input"
                     value={emailData.subject}
                     onChange={(e) => setEmailData({ ...emailData, subject: e.target.value })}
                     placeholder="Oggetto dell'email"
@@ -110,11 +112,9 @@ export default function AdminSettingsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tipo Email
-                  </label>
+                  <label className="block text-sm font-medium mb-2">Tipo Email</label>
                   <select
-                    className="input"
+                    className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     value={emailData.type}
                     onChange={(e) => setEmailData({ ...emailData, type: e.target.value })}
                   >
@@ -126,96 +126,123 @@ export default function AdminSettingsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Messaggio (HTML) <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium mb-2">
+                    Messaggio (HTML) <span className="text-destructive">*</span>
                   </label>
                   <textarea
-                    className="input font-mono text-sm"
+                    className="flex min-h-[120px] w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 font-mono"
                     rows={8}
                     value={emailData.body}
                     onChange={(e) => setEmailData({ ...emailData, body: e.target.value })}
                     required
                     placeholder="<h1>Titolo</h1>&#10;<p>Messaggio...</p>"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Supporta HTML per formattazione avanzata
                   </p>
                 </div>
-                <button
+                <Button
                   type="submit"
-                  className="btn btn-primary w-full"
+                  className="w-full"
                   disabled={sendEmailMutation.isPending}
                 >
                   {sendEmailMutation.isPending ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <span className="animate-spin">⏳</span> Invio in corso...
-                    </span>
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Invio in corso...
+                    </>
                   ) : (
-                    <span className="flex items-center justify-center gap-2">
-                      📤 Invia Email
-                    </span>
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      Invia Email
+                    </>
                   )}
-                </button>
+                </Button>
               </form>
-            </div>
+            </CardContent>
+          </Card>
 
-            {/* Storico Email */}
-            <div className="card">
-              <div className="flex items-center justify-between mb-4">
+          {/* Storico Email */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl">📬</span>
-                  <h2 className="text-lg font-semibold">Storico Email</h2>
+                  <Inbox className="h-5 w-5" />
+                  <CardTitle>Storico Email</CardTitle>
                 </div>
                 {emailStats.total > 0 && (
-                  <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                    {emailStats.total} totali
-                  </span>
+                  <Badge variant="secondary">{emailStats.total} totali</Badge>
                 )}
               </div>
-              
+              <CardDescription>Ultime email inviate dal sistema</CardDescription>
+            </CardHeader>
+            <CardContent>
               {/* Stats */}
               {emailStats.total > 0 && (
                 <div className="grid grid-cols-3 gap-2 mb-4">
-                  <div className="bg-green-50 p-2 rounded text-center">
-                    <p className="text-xs text-gray-600">Inviate</p>
-                    <p className="text-lg font-bold text-green-700">{emailStats.sent}</p>
+                  <div className="bg-success/10 p-3 rounded-xl text-center">
+                    <p className="text-xs text-muted-foreground mb-1">Inviate</p>
+                    <p className="text-lg font-bold text-success">{emailStats.sent}</p>
                   </div>
-                  <div className="bg-red-50 p-2 rounded text-center">
-                    <p className="text-xs text-gray-600">Fallite</p>
-                    <p className="text-lg font-bold text-red-700">{emailStats.failed}</p>
+                  <div className="bg-destructive/10 p-3 rounded-xl text-center">
+                    <p className="text-xs text-muted-foreground mb-1">Fallite</p>
+                    <p className="text-lg font-bold text-destructive">{emailStats.failed}</p>
                   </div>
-                  <div className="bg-yellow-50 p-2 rounded text-center">
-                    <p className="text-xs text-gray-600">In attesa</p>
-                    <p className="text-lg font-bold text-yellow-700">{emailStats.pending}</p>
+                  <div className="bg-warning/10 p-3 rounded-xl text-center">
+                    <p className="text-xs text-muted-foreground mb-1">In attesa</p>
+                    <p className="text-lg font-bold text-warning">{emailStats.pending}</p>
                   </div>
                 </div>
               )}
 
               {loadingEmails ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">Caricamento...</p>
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-20 w-full" />
+                  ))}
                 </div>
               ) : emailNotifications && emailNotifications.length > 0 ? (
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {emailNotifications.slice(0, 10).map((email: any) => (
-                    <div key={email.id} className="border-b pb-3 last:border-0 hover:bg-gray-50 p-2 rounded transition-colors">
-                      <div className="flex justify-between items-start mb-1">
+                    <div
+                      key={email.id}
+                      className="border rounded-xl p-3 hover:bg-accent transition-colors"
+                    >
+                      <div className="flex justify-between items-start mb-2">
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm truncate">{email.subject}</p>
-                          <p className="text-xs text-gray-600 truncate">{email.to}</p>
+                          <p className="text-xs text-muted-foreground truncate">{email.to}</p>
                         </div>
-                        <span className={`px-2 py-1 text-xs rounded whitespace-nowrap ml-2 ${
-                          email.status === 'SENT' ? 'bg-green-100 text-green-800' :
-                          email.status === 'FAILED' ? 'bg-red-100 text-red-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {email.status === 'SENT' ? '✓ Inviata' :
-                           email.status === 'FAILED' ? '✗ Fallita' :
-                           '⏳ In attesa'}
-                        </span>
+                        <Badge
+                          variant={
+                            email.status === 'SENT'
+                              ? 'success'
+                              : email.status === 'FAILED'
+                              ? 'danger'
+                              : 'warning'
+                          }
+                          className="ml-2 whitespace-nowrap"
+                        >
+                          {email.status === 'SENT' ? (
+                            <>
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                              Inviata
+                            </>
+                          ) : email.status === 'FAILED' ? (
+                            <>
+                              <XCircle className="h-3 w-3 mr-1" />
+                              Fallita
+                            </>
+                          ) : (
+                            <>
+                              <Clock className="h-3 w-3 mr-1" />
+                              In attesa
+                            </>
+                          )}
+                        </Badge>
                       </div>
-                      <div className="flex items-center justify-between mt-1">
-                        <p className="text-xs text-gray-500">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-muted-foreground">
                           {new Date(email.createdAt).toLocaleString('it-IT', {
                             day: '2-digit',
                             month: '2-digit',
@@ -225,106 +252,100 @@ export default function AdminSettingsPage() {
                           })}
                         </p>
                         {email.type && (
-                          <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
+                          <Badge variant="outline" className="text-xs">
                             {email.type}
-                          </span>
+                          </Badge>
                         )}
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12">
-                  <span className="text-4xl mb-2 block">📭</span>
-                  <p className="text-gray-500">Nessuna email inviata</p>
-                  <p className="text-xs text-gray-400 mt-1">Le email inviate appariranno qui</p>
-                </div>
+                <EmptyState
+                  icon={<Inbox className="h-12 w-12" />}
+                  title="Nessuna email inviata"
+                  description="Le email inviate appariranno qui"
+                />
               )}
-            </div>
+            </CardContent>
+          </Card>
 
-            {/* Configurazione Sistema */}
-            <div className="card">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-2xl">⚙️</span>
-                <h2 className="text-lg font-semibold">Configurazione Sistema</h2>
+          {/* Configurazione Sistema */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                <CardTitle>Configurazione Sistema</CardTitle>
               </div>
+              <CardDescription>Stato configurazione servizi esterni</CardDescription>
+            </CardHeader>
+            <CardContent>
               <div className="space-y-4">
-                <div className="border rounded-lg p-4 bg-gray-50">
+                <div className="border rounded-xl p-4 bg-muted/50">
                   <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Stripe Secret Key
-                    </label>
-                    <span className={`px-2 py-1 text-xs rounded ${
-                      systemInfo.stripeConfigured 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {systemInfo.stripeConfigured ? '✓ Configurato' : '⚠ Non configurato'}
-                    </span>
+                    <label className="block text-sm font-medium">Stripe Secret Key</label>
+                    <Badge variant="secondary">Configurato</Badge>
                   </div>
-                  <input
+                  <Input
                     type="password"
-                    className="input bg-white"
-                    value={systemInfo.stripeConfigured ? 'sk_••••••••••••••••' : ''}
+                    value="sk_••••••••••••••••"
                     placeholder="sk_..."
                     disabled
+                    className="bg-background"
                   />
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-muted-foreground mt-2">
                     Configurato tramite variabili d'ambiente
                   </p>
                 </div>
-                
-                <div className="border rounded-lg p-4 bg-gray-50">
+
+                <div className="border rounded-xl p-4 bg-muted/50">
                   <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-medium text-gray-700">
-                      SMTP Host
-                    </label>
-                    <span className="px-2 py-1 text-xs rounded bg-green-100 text-green-800">
-                      ✓ Configurato
-                    </span>
+                    <label className="block text-sm font-medium">SMTP Host</label>
+                    <Badge variant="success">Configurato</Badge>
                   </div>
-                  <input
+                  <Input
                     type="text"
-                    className="input bg-white"
                     value="smtp.gmail.com"
                     disabled
+                    className="bg-background"
                   />
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-muted-foreground mt-2">
                     Configurato tramite variabili d'ambiente
                   </p>
                 </div>
               </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            {/* Info Sistema */}
-            <div className="card">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-2xl">ℹ️</span>
-                <h2 className="text-lg font-semibold">Informazioni Sistema</h2>
+          {/* Info Sistema */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Info className="h-5 w-5" />
+                <CardTitle>Informazioni Sistema</CardTitle>
               </div>
+              <CardDescription>Dettagli versione e ambiente</CardDescription>
+            </CardHeader>
+            <CardContent>
               <div className="space-y-4">
                 <div className="border-b pb-3">
-                  <p className="text-xs text-gray-500 mb-1">Versione Applicazione</p>
-                  <p className="font-semibold text-gray-900">1.0.0</p>
+                  <p className="text-xs text-muted-foreground mb-1">Versione Applicazione</p>
+                  <p className="font-semibold">1.0.0</p>
                 </div>
                 <div className="border-b pb-3">
-                  <p className="text-xs text-gray-500 mb-1">Ambiente</p>
+                  <p className="text-xs text-muted-foreground mb-1">Ambiente</p>
                   <div className="flex items-center gap-2">
-                    <p className="font-semibold text-gray-900 capitalize">
-                      {systemInfo.environment}
-                    </p>
-                    <span className="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-800">
-                      {systemInfo.environment === 'production' ? 'PROD' : 'DEV'}
-                    </span>
+                    <p className="font-semibold capitalize">Production</p>
+                    <Badge variant="default">PROD</Badge>
                   </div>
                 </div>
                 <div className="border-b pb-3">
-                  <p className="text-xs text-gray-500 mb-1">Database</p>
-                  <p className="font-semibold text-gray-900">{systemInfo.database}</p>
+                  <p className="text-xs text-muted-foreground mb-1">Database</p>
+                  <p className="font-semibold">PostgreSQL (Railway)</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 mb-1">Ultimo Aggiornamento</p>
-                  <p className="font-semibold text-gray-900">
+                  <p className="text-xs text-muted-foreground mb-1">Ultimo Aggiornamento</p>
+                  <p className="font-semibold">
                     {new Date().toLocaleDateString('it-IT', {
                       day: '2-digit',
                       month: 'long',
@@ -333,11 +354,10 @@ export default function AdminSettingsPage() {
                   </p>
                 </div>
               </div>
-            </div>
-          </div>
-        </main>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </AdminLayout>
   );
 }
-
