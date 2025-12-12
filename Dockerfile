@@ -28,6 +28,7 @@ RUN npm run build
 EXPOSE 3001
 
 # Run migrations and start server
-CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]
+# Se le migrazioni falliscono, loggiamo l'errore ma avviamo comunque il server
+CMD ["sh", "-c", "npx prisma migrate deploy || echo 'Migration failed, continuing anyway...' && npm start"]
 
 

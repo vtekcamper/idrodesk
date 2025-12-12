@@ -18,6 +18,7 @@ import adminRoutes from './routes/adminRoutes';
 dotenv.config();
 
 const app = express();
+// Railway usa la variabile PORT automaticamente, ma se non è settata usiamo 3001
 const PORT = process.env.PORT || 3001;
 
 // Middleware
