@@ -1,27 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { adminApi } from '@/lib/adminApi';
-import { adminAuth } from '@/lib/adminAuth';
-import { useRouter } from 'next/navigation';
+import AdminLayout from '@/components/AdminLayout';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
 export default function AdminCompaniesPage() {
-  const router = useRouter();
   const [filters, setFilters] = useState({
     search: '',
     piano: '',
     attivo: '',
   });
-
-  useEffect(() => {
-    if (!adminAuth.isSuperAdmin()) {
-      router.push('/admin/login');
-    }
-  }, [router]);
 
   const { data: companies, isLoading } = useQuery({
     queryKey: ['admin', 'companies', filters],
@@ -29,29 +21,19 @@ export default function AdminCompaniesPage() {
       const response = await adminApi.getAllCompanies(filters);
       return response.data;
     },
-    enabled: adminAuth.isSuperAdmin(),
   });
 
-  if (!adminAuth.isSuperAdmin()) {
-    return null;
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Link href="/admin/dashboard" className="text-primary-600 hover:text-primary-700 mb-2 inline-block">
-                ← Dashboard
-              </Link>
-              <h1 className="text-2xl font-bold text-gray-900">Gestione Aziende</h1>
-            </div>
+    <AdminLayout>
+      <div className="flex-1 overflow-y-auto">
+        <header className="bg-white shadow-sm border-b">
+          <div className="px-6 py-4">
+            <h1 className="text-2xl font-bold text-gray-900">Gestione Aziende</h1>
+            <p className="text-sm text-gray-600">Visualizza e gestisci tutte le aziende registrate</p>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="p-6">
         {/* Filters */}
         <div className="card mb-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -147,8 +129,9 @@ export default function AdminCompaniesPage() {
             <p className="text-gray-500">Nessuna azienda trovata</p>
           </div>
         )}
-      </main>
-    </div>
+        </main>
+      </div>
+    </AdminLayout>
   );
 }
 

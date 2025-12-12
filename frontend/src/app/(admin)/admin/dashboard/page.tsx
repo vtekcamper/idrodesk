@@ -2,21 +2,12 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { adminApi } from '@/lib/adminApi';
-import { adminAuth } from '@/lib/adminAuth';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import AdminLayout from '@/components/AdminLayout';
+import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
 export default function AdminDashboardPage() {
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!adminAuth.isSuperAdmin()) {
-      router.push('/admin/login');
-    }
-  }, [router]);
-
   const { data: stats, isLoading: loadingStats } = useQuery({
     queryKey: ['admin', 'stats'],
     queryFn: async () => {
@@ -33,67 +24,79 @@ export default function AdminDashboardPage() {
     },
   });
 
-  if (!adminAuth.isSuperAdmin()) {
-    return null;
-  }
-
-  const admin = adminAuth.getAdmin();
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-              <p className="text-sm text-gray-600">Gestione sistema IdroDesk</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">
-                {admin?.nome} {admin?.cognome}
-              </span>
-              <button
-                onClick={() => {
-                  adminAuth.logout();
-                  router.push('/admin/login');
-                }}
-                className="btn btn-secondary"
-              >
-                Esci
-              </button>
-            </div>
+    <AdminLayout>
+      <div className="flex-1 overflow-y-auto">
+        {/* Header */}
+        <header className="bg-white shadow-sm border-b">
+          <div className="px-6 py-4">
+            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-sm text-gray-600">Panoramica sistema IdroDesk</p>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats */}
-        {loadingStats ? (
-          <p>Caricamento statistiche...</p>
-        ) : stats && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div className="card">
-              <h3 className="text-sm font-medium text-gray-500">Totale Aziende</h3>
-              <p className="text-3xl font-bold mt-2">{stats.companies.total}</p>
-              <p className="text-sm text-gray-600 mt-1">
-                {stats.companies.active} attive
-              </p>
+        <main className="p-6">
+          {/* Stats Cards */}
+          {loadingStats ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="card animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+                  <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+                </div>
+              ))}
             </div>
-            <div className="card">
-              <h3 className="text-sm font-medium text-gray-500">Nuove Questo Mese</h3>
-              <p className="text-3xl font-bold mt-2">{stats.companies.newThisMonth}</p>
+          ) : stats && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="card bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-medium text-blue-700">Totale Aziende</h3>
+                    <p className="text-3xl font-bold mt-2 text-blue-900">{stats.companies.total}</p>
+                    <p className="text-sm text-blue-600 mt-1">
+                      {stats.companies.active} attive • {stats.companies.inactive} inattive
+                    </p>
+                  </div>
+                  <div className="text-4xl">🏢</div>
+                </div>
+              </div>
+              
+              <div className="card bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-medium text-green-700">Nuove Questo Mese</h3>
+                    <p className="text-3xl font-bold mt-2 text-green-900">{stats.companies.newThisMonth}</p>
+                    <p className="text-sm text-green-600 mt-1">Registrazioni recenti</p>
+                  </div>
+                  <div className="text-4xl">📈</div>
+                </div>
+              </div>
+              
+              <div className="card bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-medium text-purple-700">Totale Utenti</h3>
+                    <p className="text-3xl font-bold mt-2 text-purple-900">{stats.users.total}</p>
+                    <p className="text-sm text-purple-600 mt-1">Utenti attivi</p>
+                  </div>
+                  <div className="text-4xl">👥</div>
+                </div>
+              </div>
+              
+              <div className="card bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-medium text-orange-700">Totale Lavori</h3>
+                    <p className="text-3xl font-bold mt-2 text-orange-900">{stats.data.jobs}</p>
+                    <p className="text-sm text-orange-600 mt-1">
+                      {stats.data.quotes} preventivi • {stats.data.clients} clienti
+                    </p>
+                  </div>
+                  <div className="text-4xl">🔧</div>
+                </div>
+              </div>
             </div>
-            <div className="card">
-              <h3 className="text-sm font-medium text-gray-500">Totale Utenti</h3>
-              <p className="text-3xl font-bold mt-2">{stats.users.total}</p>
-            </div>
-            <div className="card">
-              <h3 className="text-sm font-medium text-gray-500">Totale Lavori</h3>
-              <p className="text-3xl font-bold mt-2">{stats.data.jobs}</p>
-            </div>
-          </div>
-        )}
+          )}
 
         {/* Companies by Plan */}
         {stats && (
@@ -120,12 +123,12 @@ export default function AdminDashboardPage() {
         <div className="card">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Aziende</h2>
-            <a
+            <Link
               href="/admin/companies"
-              className="text-primary-600 hover:text-primary-700 text-sm"
+              className="text-primary-600 hover:text-primary-700 text-sm font-medium"
             >
               Vedi tutte →
-            </a>
+            </Link>
           </div>
           {loadingCompanies ? (
             <p className="text-gray-500">Caricamento...</p>
@@ -156,14 +159,14 @@ export default function AdminDashboardPage() {
                         </span>
                       </td>
                       <td className="border p-2">{company._count.users}</td>
-                      <td className="border p-2">
-                        <a
-                          href={`/admin/companies/${company.id}`}
-                          className="text-primary-600 hover:text-primary-700 text-sm"
-                        >
-                          Gestisci
-                        </a>
-                      </td>
+                    <td className="border p-2">
+                      <Link
+                        href={`/admin/companies/${company.id}`}
+                        className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+                      >
+                        Gestisci →
+                      </Link>
+                    </td>
                     </tr>
                   ))}
                 </tbody>
@@ -173,8 +176,9 @@ export default function AdminDashboardPage() {
             <p className="text-gray-500">Nessuna azienda trovata</p>
           )}
         </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </AdminLayout>
   );
 }
 
