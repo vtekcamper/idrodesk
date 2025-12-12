@@ -97,7 +97,7 @@ export default function NewJobPage() {
     });
   };
 
-  const handleQuickCreateClient = (e: React.FormEvent) => {
+  const handleQuickCreateClient = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     const formData = new FormData(form);
