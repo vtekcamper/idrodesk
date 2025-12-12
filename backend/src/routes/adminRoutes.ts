@@ -28,6 +28,8 @@ import {
 import {
   sendEmail,
   getAllEmailNotifications,
+  previewEmailTemplate,
+  getEmailTemplates,
 } from '../controllers/emailController';
 import {
   getAdvancedReports,
@@ -44,6 +46,11 @@ import {
   stopImpersonation,
 } from '../controllers/impersonationController';
 import { runSubscriptionStateJob } from '../jobs/subscriptionStateJob';
+import {
+  sendTrialExpiringEmails,
+  sendSubscriptionExpiredEmails,
+  sendSubscriptionReminderEmails,
+} from '../jobs/emailTriggers';
 
 const router = Router();
 
@@ -173,6 +180,8 @@ router.get('/payments/:id', getPayment);
 
 // Email
 router.post('/emails/send', sendEmail);
+router.post('/emails/preview', previewEmailTemplate);
+router.get('/emails/templates', getEmailTemplates);
 router.get('/emails', getAllEmailNotifications);
 
 // Reports
@@ -197,6 +206,36 @@ router.post('/jobs/subscription-state', async (req, res) => {
   } catch (error: any) {
     console.error('Subscription state job error:', error);
     res.status(500).json({ error: error.message || 'Errore nell\'esecuzione job' });
+  }
+});
+
+router.post('/jobs/email/trial-expiring', async (req, res) => {
+  try {
+    const result = await sendTrialExpiringEmails();
+    res.json({ success: true, ...result });
+  } catch (error: any) {
+    console.error('Trial expiring emails job error:', error);
+    res.status(500).json({ error: error.message || 'Errore nell\'invio email trial' });
+  }
+});
+
+router.post('/jobs/email/subscription-expired', async (req, res) => {
+  try {
+    const result = await sendSubscriptionExpiredEmails();
+    res.json({ success: true, ...result });
+  } catch (error: any) {
+    console.error('Subscription expired emails job error:', error);
+    res.status(500).json({ error: error.message || 'Errore nell\'invio email scadenza' });
+  }
+});
+
+router.post('/jobs/email/subscription-reminder', async (req, res) => {
+  try {
+    const result = await sendSubscriptionReminderEmails();
+    res.json({ success: true, ...result });
+  } catch (error: any) {
+    console.error('Subscription reminder emails job error:', error);
+    res.status(500).json({ error: error.message || 'Errore nell\'invio reminder' });
   }
 });
 

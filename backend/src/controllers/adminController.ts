@@ -3,6 +3,7 @@ import prisma from '../config/database';
 import { getPlanLimits } from '../config/planLimits';
 import { calculateSubscriptionStatus, updateCompanySubscriptionStatus } from '../utils/subscriptionState';
 import { logAuditAction } from '../middleware/auditLog';
+import { triggerPlanChangeEmail } from '../jobs/emailTriggers';
 
 /**
  * Ottiene tutte le aziende (solo super admin)
@@ -238,6 +239,16 @@ export const updateCompanyPlan = async (req: Request, res: Response) => {
       },
       motivo,
     });
+
+    // Trigger email cambio piano
+    const isUpgrade = ['BASIC', 'PRO', 'ELITE'].indexOf(updated.pianoAbbonamento) >
+                      ['BASIC', 'PRO', 'ELITE'].indexOf(company.pianoAbbonamento);
+    await triggerPlanChangeEmail(
+      id,
+      company.pianoAbbonamento,
+      updated.pianoAbbonamento,
+      isUpgrade
+    );
 
     res.json({
       ...updated,

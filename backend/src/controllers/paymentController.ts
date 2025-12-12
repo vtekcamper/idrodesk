@@ -3,6 +3,7 @@ import prisma from '../config/database';
 import Stripe from 'stripe';
 import { PaymentProvider, PaymentStatus } from '@prisma/client';
 import { updateCompanySubscriptionStatus } from '../utils/subscriptionState';
+import { triggerPaymentSuccessEmail, triggerPaymentFailedEmail } from '../jobs/emailTriggers';
 
 // Inizializza Stripe solo se la chiave è presente
 const getStripe = () => {
@@ -229,6 +230,13 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
 
     // Aggiorna subscription status
     await updateCompanySubscriptionStatus(prisma, payment.companyId);
+
+    // Trigger email pagamento riuscito
+    await triggerPaymentSuccessEmail(
+      payment.companyId,
+      Number(payment.amount),
+      newExpiryDate
+    );
   }
 }
 
@@ -242,6 +250,19 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
       status: PaymentStatus.FAILED,
     },
   });
+
+  // Trova payment per trigger email
+  const payment = await prisma.payment.findFirst({
+    where: { providerPaymentId: paymentIntent.id },
+  });
+
+  if (payment) {
+    await triggerPaymentFailedEmail(
+      payment.companyId,
+      Number(payment.amount),
+      paymentIntent.last_payment_error?.message || 'Pagamento fallito'
+    );
+  }
 }
 
 /**

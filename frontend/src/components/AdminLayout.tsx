@@ -35,6 +35,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { href: '/admin/payments', label: 'Pagamenti', icon: '💵' },
     { href: '/admin/reports', label: 'Report', icon: '📈' },
     { href: '/admin/audit-logs', label: 'Audit Log', icon: '📋' },
+    { href: '/admin/emails/templates', label: 'Template Email', icon: '📧' },
     { href: '/admin/settings', label: 'Impostazioni', icon: '⚙️' },
   ];
 

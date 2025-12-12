@@ -73,6 +73,11 @@ export const adminApi = {
   // Impersonation
   impersonateUser: (userId: string) => apiClient.axiosInstance.post(`/admin/impersonate/${userId}`),
   stopImpersonation: () => apiClient.axiosInstance.post('/admin/impersonate/stop'),
+
+  // Email Templates
+  previewEmailTemplate: (data: { type: string; templateData?: any }) =>
+    apiClient.axiosInstance.post('/admin/emails/preview', data),
+  getEmailTemplates: () => apiClient.axiosInstance.get('/admin/emails/templates'),
 };
 
 

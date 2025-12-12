@@ -31,7 +31,9 @@
     "@paypal/checkout-server-sdk": "^1.0.3",
     "nodemailer": "^6.9.8",
     "handlebars": "^4.7.8",
-    "express-rate-limit": "^7.1.5"
+    "express-rate-limit": "^7.1.5",
+    "bullmq": "^5.3.0",
+    "ioredis": "^5.3.2"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -42,6 +44,7 @@
     "@types/node": "^20.10.5",
     "@types/nodemailer": "^6.4.14",
     "@types/express-rate-limit": "^5.0.0",
+    "@types/ioredis": "^5.0.0",
     "prisma": "^5.7.1",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
