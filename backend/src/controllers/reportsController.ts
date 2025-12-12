@@ -279,22 +279,30 @@ export const getTopCompanies = async (req: Request, res: Response) => {
               clients: true,
             },
           },
-          payments: {
+        },
+      });
+
+      // Calcola revenue per ogni azienda
+      const companiesWithRevenue = await Promise.all(
+        companies.map(async (company) => {
+          const revenueResult = await prisma.payment.aggregate({
             where: {
+              companyId: company.id,
               status: 'COMPLETED',
             },
             _sum: {
               amount: true,
             },
-          },
-        },
-      });
+          });
 
-      const sorted = companies
-        .map((c) => ({
-          ...c,
-          totalRevenue: c.payments._sum.amount || 0,
-        }))
+          return {
+            ...company,
+            totalRevenue: revenueResult._sum.amount || 0,
+          };
+        })
+      );
+
+      const sorted = companiesWithRevenue
         .sort((a, b) => Number(b.totalRevenue) - Number(a.totalRevenue))
         .slice(0, limitNum);
 
