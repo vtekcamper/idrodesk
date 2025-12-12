@@ -31,6 +31,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { href: '/admin/companies', label: 'Aziende', icon: '🏢' },
     { href: '/admin/users', label: 'Utenti', icon: '👥' },
     { href: '/admin/subscriptions', label: 'Abbonamenti', icon: '💳' },
+    { href: '/admin/payments', label: 'Pagamenti', icon: '💵' },
     { href: '/admin/reports', label: 'Report', icon: '📈' },
     { href: '/admin/settings', label: 'Impostazioni', icon: '⚙️' },
   ];
