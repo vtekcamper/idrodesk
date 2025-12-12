@@ -70,17 +70,21 @@ export default function BillingPage() {
           value={billing?.plan ? planLabels[billing.plan] || billing.plan : 'N/A'}
           icon={<CreditCard className="h-8 w-8 text-primary" />}
         />
-        <StatCard
-          title="Stato"
-          value={
-            billing?.status ? (
-              <StatusBadge status={billing.status} type="subscription" />
-            ) : (
-              'N/A'
-            )
-          }
-          icon={<TrendingUp className="h-8 w-8 text-success" />}
-        />
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Stato</p>
+                {billing?.status ? (
+                  <StatusBadge status={billing.status} type="subscription" />
+                ) : (
+                  <p className="text-lg font-semibold">N/A</p>
+                )}
+              </div>
+              <TrendingUp className="h-8 w-8 text-success" />
+            </div>
+          </CardContent>
+        </Card>
         {billing?.daysRemaining !== null && (
           <StatCard
             title="Giorni Rimanenti"
