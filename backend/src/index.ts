@@ -13,6 +13,7 @@ import materialRoutes from './routes/materialRoutes';
 import checklistRoutes from './routes/checklistRoutes';
 import userRoutes from './routes/userRoutes';
 import { jobChecklistRouter } from './routes/jobRoutes';
+import adminRoutes from './routes/adminRoutes';
 
 dotenv.config();
 
@@ -38,6 +39,7 @@ app.get('/health', (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/quotes', quoteRoutes);
 app.use('/api/jobs', jobRoutes);

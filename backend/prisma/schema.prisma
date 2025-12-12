@@ -19,7 +19,10 @@ model Company {
   email             String?
   logoUrl           String?
   pianoAbbonamento  PianoAbbonamento @default(BASIC)
+  abbonamentoAttivo Boolean   @default(true)
+  dataScadenza      DateTime?
   createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   users             User[]
   clients           Client[]
@@ -27,6 +30,7 @@ model Company {
   jobs              Job[]
   materials         Material[]
   checklists        Checklist[]
+  subscriptionHistory SubscriptionHistory[]
 
   @@map("companies")
 }
@@ -39,7 +43,7 @@ enum PianoAbbonamento {
 
 model User {
   id            String    @id @default(cuid())
-  companyId     String
+  companyId     String?
   nome          String
   cognome       String
   email         String
@@ -47,9 +51,10 @@ model User {
   ruolo         Ruolo     @default(BACKOFFICE)
   passwordHash  String
   attivo        Boolean   @default(true)
+  isSuperAdmin  Boolean   @default(false)
   createdAt     DateTime  @default(now())
 
-  company       Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company       Company?  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   jobsAssegnati Job[]     @relation("JobAssegnatoA")
   jobChecklists JobChecklist[]
   attachments   JobAttachment[]
@@ -324,5 +329,19 @@ enum TipoAllegato {
   FOTO
   DOCUMENTO
   ALTRO
+}
+
+model SubscriptionHistory {
+  id            String    @id @default(cuid())
+  companyId     String
+  pianoPrecedente PianoAbbonamento?
+  pianoNuovo    PianoAbbonamento
+  dataCambio    DateTime  @default(now())
+  motivo        String?
+  cambiatoDa    String?   // ID super admin che ha fatto il cambio
+
+  company       Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("subscription_history")
 }
 

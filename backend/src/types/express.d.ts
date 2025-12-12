@@ -5,9 +5,10 @@ declare global {
     interface Request {
       user?: {
         userId: string;
-        companyId: string;
+        companyId?: string;
         role: Ruolo;
         email: string;
+        isSuperAdmin?: boolean;
       };
       companyId?: string;
     }

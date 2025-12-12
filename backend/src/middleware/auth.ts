@@ -17,8 +17,12 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
       companyId: payload.companyId,
       role: payload.role as any,
       email: payload.email,
+      isSuperAdmin: payload.isSuperAdmin || false,
     };
-    req.companyId = payload.companyId;
+    // Super admin può non avere companyId
+    if (payload.companyId) {
+      req.companyId = payload.companyId;
+    }
 
     next();
   } catch (error) {

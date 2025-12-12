@@ -59,6 +59,7 @@ export const registerCompany = async (req: Request, res: Response) => {
       companyId: company.id,
       role: user.ruolo,
       email: user.email,
+      isSuperAdmin: user.isSuperAdmin || false,
     };
 
     const accessToken = generateAccessToken(tokenPayload);
@@ -93,6 +94,11 @@ export const login = async (req: Request, res: Response) => {
       where: { email },
       include: { company: true },
     });
+
+    // Super admin non può fare login normale, deve usare endpoint dedicato
+    if (user?.isSuperAdmin) {
+      return res.status(401).json({ error: 'Usa l\'endpoint /admin/login per super admin' });
+    }
 
     if (!user || !user.attivo) {
       return res.status(401).json({ error: 'Credenziali non valide' });

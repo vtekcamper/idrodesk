@@ -1,18 +1,29 @@
 import { Router } from 'express';
-import { authenticate, requireRole } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
+import { checkPlanLimits } from '../middleware/planLimits';
 import prisma from '../config/database';
 import { hashPassword } from '../utils/password';
 
 const router = Router();
 
 router.use(authenticate);
-router.use(requireRole('OWNER'));
+// Solo OWNER o super admin possono gestire utenti
+router.use((req, res, next) => {
+  if (req.user?.isSuperAdmin || req.user?.role === 'OWNER') {
+    return next();
+  }
+  return res.status(403).json({ error: 'Permessi insufficienti' });
+});
 
 router.get('/', async (req, res) => {
   try {
-    const companyId = req.companyId!;
+    // Super admin può vedere tutti, OWNER solo della sua azienda
+    const where: any = req.user?.isSuperAdmin 
+      ? { isSuperAdmin: false, companyId: { not: null } } // Super admin vede tutti gli utenti aziendali
+      : { companyId: req.companyId! };
+      
     const users = await prisma.user.findMany({
-      where: { companyId },
+      where,
       select: {
         id: true,
         nome: true,
@@ -33,9 +44,14 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+// Verifica limiti utenti prima di creare (solo per utenti aziendali, non super admin)
+router.post('/', checkPlanLimits('users'), async (req, res) => {
   try {
-    const companyId = req.companyId!;
+    // Super admin può creare utenti per qualsiasi azienda
+    const companyId = req.user?.isSuperAdmin 
+      ? req.body.companyId || req.companyId
+      : req.companyId!;
+      
     const {
       nome,
       cognome,
@@ -45,23 +61,31 @@ router.post('/', async (req, res) => {
       password,
     } = req.body;
 
-    // Verifica che l'email non esista già per questa company
-    const existing = await prisma.user.findUnique({
-      where: {
-        companyId_email: {
-          companyId,
-          email,
-        },
-      },
-    });
+    if (!companyId && !req.user?.isSuperAdmin) {
+      return res.status(400).json({ error: 'companyId richiesto per creare utenti aziendali' });
+    }
+
+    // Verifica che l'email non esista già (per questa company o globalmente se super admin)
+    const existing = companyId
+      ? await prisma.user.findUnique({
+          where: {
+            companyId_email: {
+              companyId,
+              email,
+            },
+          },
+        })
+      : await prisma.user.findUnique({
+          where: { email },
+        });
 
     if (existing) {
-      return res.status(400).json({ error: 'Email già esistente' });
+      return res.status(400).json({ error: 'Email già esistente per questa azienda' });
     }
 
     const user = await prisma.user.create({
       data: {
-        companyId,
+        ...(companyId && { companyId }),
         nome,
         cognome,
         email,
@@ -91,7 +115,11 @@ router.post('/', async (req, res) => {
 router.patch('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const companyId = req.companyId!;
+    // Super admin può modificare qualsiasi utente
+    const where: any = req.user?.isSuperAdmin
+      ? { id }
+      : { id, companyId: req.companyId! };
+      
     const {
       nome,
       cognome,
@@ -103,7 +131,7 @@ router.patch('/:id', async (req, res) => {
     } = req.body;
 
     const user = await prisma.user.findFirst({
-      where: { id, companyId },
+      where,
     });
 
     if (!user) {
@@ -120,14 +148,18 @@ router.patch('/:id', async (req, res) => {
 
     // Se cambia email, verifica che non esista già
     if (email && email !== user.email) {
-      const existing = await prisma.user.findUnique({
-        where: {
-          companyId_email: {
-            companyId,
-            email,
-          },
-        },
-      });
+      const existing = user.companyId
+        ? await prisma.user.findUnique({
+            where: {
+              companyId_email: {
+                companyId: user.companyId,
+                email,
+              },
+            },
+          })
+        : await prisma.user.findUnique({
+            where: { email },
+          });
 
       if (existing) {
         return res.status(400).json({ error: 'Email già esistente' });

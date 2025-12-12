@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
+import { checkPlanLimits } from '../middleware/planLimits';
 import {
   getJobs,
   getJob,
@@ -29,7 +30,7 @@ router.use(authenticate);
 
 router.get('/', getJobs);
 router.get('/:id', getJob);
-router.post('/', createJob);
+router.post('/', checkPlanLimits('jobs'), createJob);
 router.patch('/:id', updateJob);
 
 // Job Materials

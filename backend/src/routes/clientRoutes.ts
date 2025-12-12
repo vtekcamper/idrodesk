@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
+import { checkPlanLimits } from '../middleware/planLimits';
 import {
   getClients,
   getClient,
@@ -13,7 +14,7 @@ router.use(authenticate);
 
 router.get('/', getClients);
 router.get('/:id', getClient);
-router.post('/', createClient);
+router.post('/', checkPlanLimits('clients'), createClient);
 router.patch('/:id', updateClient);
 
 export default router;
