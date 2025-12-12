@@ -79,13 +79,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </nav>
 
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-white">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white font-semibold">
-              {admin?.nome?.[0]?.toUpperCase()}
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary-600 to-primary-700 rounded-full flex items-center justify-center text-white font-semibold shadow-md">
+              {admin?.nome?.[0]?.toUpperCase() || 'A'}
             </div>
             {sidebarOpen && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
+                <p className="text-sm font-semibold text-gray-900 truncate">
                   {admin?.nome} {admin?.cognome}
                 </p>
                 <p className="text-xs text-gray-500 truncate">{admin?.email}</p>
@@ -97,9 +97,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               adminAuth.logout();
               router.push('/admin/login');
             }}
-            className={`mt-3 w-full btn btn-secondary text-sm ${!sidebarOpen ? 'p-2' : ''}`}
+            className={`w-full btn btn-secondary text-sm flex items-center justify-center gap-2 transition-all hover:bg-gray-300 ${!sidebarOpen ? 'p-2' : ''}`}
           >
-            {sidebarOpen ? 'Esci' : '🚪'}
+            {sidebarOpen ? (
+              <>
+                <span>🚪</span>
+                <span>Esci</span>
+              </>
+            ) : (
+              <span>🚪</span>
+            )}
           </button>
         </div>
       </aside>
