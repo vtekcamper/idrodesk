@@ -3,11 +3,27 @@
 import { useQuery } from '@tanstack/react-query';
 import { adminApi } from '@/lib/adminApi';
 import AdminLayout from '@/components/AdminLayout';
+import { PageHeader } from '@/components/ui-kit/page-header';
+import { StatCard } from '@/components/ui-kit/stat-card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui-kit/card';
+import { EmptyState } from '@/components/ui-kit/empty-state';
+import { Skeleton } from '@/components/ui-kit/skeleton';
+import { Button } from '@/components/ui-kit/button';
+import {
+  Building2,
+  TrendingUp,
+  Users,
+  Wrench,
+  ArrowRight,
+  Inbox,
+} from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
 export default function AdminDashboardPage() {
+  const router = useRouter();
   const { data: stats, isLoading: loadingStats } = useQuery({
     queryKey: ['admin', 'stats'],
     queryFn: async () => {
@@ -26,159 +42,160 @@ export default function AdminDashboardPage() {
 
   return (
     <AdminLayout>
-      <div className="flex-1 overflow-y-auto">
-        {/* Header */}
-        <header className="bg-white shadow-sm border-b">
-          <div className="px-6 py-4">
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-sm text-gray-600">Panoramica sistema IdroDesk</p>
-          </div>
-        </header>
+      <div className="p-6 space-y-6">
+        <PageHeader
+          title="Dashboard"
+          description="Panoramica sistema IdroDesk"
+          breadcrumb={[{ label: 'Admin' }, { label: 'Dashboard' }]}
+        />
 
-        <main className="p-6">
-          {/* Stats Cards */}
-          {loadingStats ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="card animate-pulse">
-                  <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-                  <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-                </div>
-              ))}
+        {/* Stats Cards */}
+        {loadingStats ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i}>
+                <CardContent className="p-6">
+                  <Skeleton className="h-4 w-24 mb-2" />
+                  <Skeleton className="h-8 w-16 mb-2" />
+                  <Skeleton className="h-3 w-32" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          stats && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <StatCard
+                title="Totale Aziende"
+                value={stats.companies.total}
+                description={`${stats.companies.active} attive • ${stats.companies.inactive} inattive`}
+                icon={<Building2 className="h-8 w-8 text-primary" />}
+              />
+              <StatCard
+                title="Nuove Questo Mese"
+                value={stats.companies.newThisMonth}
+                description="Registrazioni recenti"
+                icon={<TrendingUp className="h-8 w-8 text-success" />}
+              />
+              <StatCard
+                title="Totale Utenti"
+                value={stats.users.total}
+                description="Utenti attivi"
+                icon={<Users className="h-8 w-8 text-primary" />}
+              />
+              <StatCard
+                title="Totale Lavori"
+                value={stats.data.jobs}
+                description={`${stats.data.quotes} preventivi • ${stats.data.clients} clienti`}
+                icon={<Wrench className="h-8 w-8 text-warning" />}
+              />
             </div>
-          ) : stats && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <div className="card bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-medium text-blue-700">Totale Aziende</h3>
-                    <p className="text-3xl font-bold mt-2 text-blue-900">{stats.companies.total}</p>
-                    <p className="text-sm text-blue-600 mt-1">
-                      {stats.companies.active} attive • {stats.companies.inactive} inattive
-                    </p>
-                  </div>
-                  <div className="text-4xl">🏢</div>
-                </div>
-              </div>
-              
-              <div className="card bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-medium text-green-700">Nuove Questo Mese</h3>
-                    <p className="text-3xl font-bold mt-2 text-green-900">{stats.companies.newThisMonth}</p>
-                    <p className="text-sm text-green-600 mt-1">Registrazioni recenti</p>
-                  </div>
-                  <div className="text-4xl">📈</div>
-                </div>
-              </div>
-              
-              <div className="card bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-medium text-purple-700">Totale Utenti</h3>
-                    <p className="text-3xl font-bold mt-2 text-purple-900">{stats.users.total}</p>
-                    <p className="text-sm text-purple-600 mt-1">Utenti attivi</p>
-                  </div>
-                  <div className="text-4xl">👥</div>
-                </div>
-              </div>
-              
-              <div className="card bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-medium text-orange-700">Totale Lavori</h3>
-                    <p className="text-3xl font-bold mt-2 text-orange-900">{stats.data.jobs}</p>
-                    <p className="text-sm text-orange-600 mt-1">
-                      {stats.data.quotes} preventivi • {stats.data.clients} clienti
-                    </p>
-                  </div>
-                  <div className="text-4xl">🔧</div>
-                </div>
-              </div>
-            </div>
-          )}
+          )
+        )}
 
         {/* Companies by Plan */}
         {stats && (
-          <div className="card mb-8">
-            <h2 className="text-lg font-semibold mb-4">Aziende per Piano</h2>
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <p className="text-sm text-gray-500">BASIC</p>
-                <p className="text-2xl font-bold">{stats.companies.byPlan.BASIC || 0}</p>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Aziende per Piano</CardTitle>
+                  <CardDescription>Distribuzione abbonamenti</CardDescription>
+                </div>
+                <Link href="/admin/companies">
+                  <Button variant="ghost" size="sm">
+                    Vedi tutte
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
               </div>
-              <div>
-                <p className="text-sm text-gray-500">PRO</p>
-                <p className="text-2xl font-bold">{stats.companies.byPlan.PRO || 0}</p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 gap-6">
+                <div className="text-center p-4 rounded-xl bg-muted">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">BASIC</p>
+                  <p className="text-3xl font-bold">{stats.companies.byPlan.BASIC || 0}</p>
+                </div>
+                <div className="text-center p-4 rounded-xl bg-muted">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">PRO</p>
+                  <p className="text-3xl font-bold">{stats.companies.byPlan.PRO || 0}</p>
+                </div>
+                <div className="text-center p-4 rounded-xl bg-muted">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">ELITE</p>
+                  <p className="text-3xl font-bold">{stats.companies.byPlan.ELITE || 0}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-gray-500">ELITE</p>
-                <p className="text-2xl font-bold">{stats.companies.byPlan.ELITE || 0}</p>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Companies List */}
-        <div className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Aziende</h2>
-            <Link
-              href="/admin/companies"
-              className="text-primary-600 hover:text-primary-700 text-sm font-medium"
-            >
-              Vedi tutte →
-            </Link>
-          </div>
-          {loadingCompanies ? (
-            <p className="text-gray-500">Caricamento...</p>
-          ) : companies && companies.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="border p-2 text-left">Azienda</th>
-                    <th className="border p-2 text-left">P.IVA</th>
-                    <th className="border p-2 text-left">Piano</th>
-                    <th className="border p-2 text-left">Stato</th>
-                    <th className="border p-2 text-left">Utenti</th>
-                    <th className="border p-2 text-left">Azioni</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {companies.slice(0, 10).map((company: any) => (
-                    <tr key={company.id} className="hover:bg-gray-50">
-                      <td className="border p-2">{company.ragioneSociale}</td>
-                      <td className="border p-2">{company.piva}</td>
-                      <td className="border p-2">{company.pianoAbbonamento}</td>
-                      <td className="border p-2">
-                        <span className={`px-2 py-1 text-xs rounded ${
-                          company.abbonamentoAttivo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
-                          {company.abbonamentoAttivo ? 'Attivo' : 'Inattivo'}
-                        </span>
-                      </td>
-                      <td className="border p-2">{company._count.users}</td>
-                    <td className="border p-2">
-                      <Link
-                        href={`/admin/companies/${company.id}`}
-                        className="text-primary-600 hover:text-primary-700 text-sm font-medium"
-                      >
-                        Gestisci →
-                      </Link>
-                    </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Aziende</CardTitle>
+                <CardDescription>Ultime aziende registrate</CardDescription>
+              </div>
+              <Link href="/admin/companies">
+                <Button variant="ghost" size="sm">
+                  Vedi tutte
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </Link>
             </div>
-          ) : (
-            <p className="text-gray-500">Nessuna azienda trovata</p>
-          )}
-        </div>
-        </main>
+          </CardHeader>
+          <CardContent>
+            {loadingCompanies ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-16 w-full" />
+                ))}
+              </div>
+            ) : companies && companies.length > 0 ? (
+              <div className="space-y-4">
+                {companies.slice(0, 5).map((company: any) => (
+                  <Link
+                    key={company.id}
+                    href={`/admin/companies/${company.id}`}
+                    className="flex items-center justify-between p-4 rounded-xl border hover:bg-accent transition-colors"
+                  >
+                    <div className="flex-1">
+                      <p className="font-medium">{company.ragioneSociale}</p>
+                      <p className="text-sm text-muted-foreground">{company.piva}</p>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm text-muted-foreground">
+                        {company.pianoAbbonamento}
+                      </span>
+                      <span
+                        className={`px-2 py-1 text-xs rounded-full ${
+                          company.abbonamentoAttivo
+                            ? 'bg-success/10 text-success'
+                            : 'bg-destructive/10 text-destructive'
+                        }`}
+                      >
+                        {company.abbonamentoAttivo ? 'Attivo' : 'Inattivo'}
+                      </span>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={<Inbox className="h-12 w-12" />}
+                title="Nessuna azienda trovata"
+                description="Le aziende registrate appariranno qui"
+                action={{
+                  label: 'Vedi tutte le aziende',
+                  onClick: () => router.push('/admin/companies'),
+                }}
+              />
+            )}
+          </CardContent>
+        </Card>
       </div>
     </AdminLayout>
   );
 }
-
