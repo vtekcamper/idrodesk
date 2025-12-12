@@ -1,5 +1,6 @@
 import winston from 'winston';
 import path from 'path';
+import fs from 'fs';
 
 /**
  * Logger strutturato per produzione
@@ -26,6 +27,9 @@ const consoleFormat = winston.format.combine(
 
 // Crea directory logs se non esiste
 const logsDir = path.join(process.cwd(), 'logs');
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
+}
 
 export const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
