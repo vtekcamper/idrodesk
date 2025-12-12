@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../config/database';
 import { Prisma } from '@prisma/client';
+import { generateQuoteNumber } from '../utils/quoteNumber';
 
 const calculateTotals = (items: any[]) => {
   let totaleNetto = 0;
@@ -125,21 +126,40 @@ export const createQuote = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Cliente non trovato' });
     }
 
+    // Genera numero preventivo se non fornito
+    let finalNumeroPreventivo = numeroPreventivo;
+    if (!finalNumeroPreventivo) {
+      finalNumeroPreventivo = await generateQuoteNumber(companyId);
+    }
+
+    // Ottieni DocumentSettings per IVA default
+    const docSettings = await prisma.documentSettings.findUnique({
+      where: { companyId },
+    });
+
+    const defaultTaxRate = docSettings?.defaultTaxRate ? Number(docSettings.defaultTaxRate) : 22;
+
+    // Applica IVA default agli items se non specificata
+    const itemsWithTax = items.map((item: any) => ({
+      ...item,
+      ivaPercentuale: item.ivaPercentuale !== undefined ? item.ivaPercentuale : defaultTaxRate,
+    }));
+
     // Calcola totali
-    const totals = calculateTotals(items);
+    const totals = calculateTotals(itemsWithTax);
 
     const quote = await prisma.quote.create({
       data: {
         companyId,
         clientId,
         siteId: siteId || null,
-        numeroPreventivo,
+        numeroPreventivo: finalNumeroPreventivo,
         data: data ? new Date(data) : new Date(),
         noteInterne,
         noteCliente,
         ...totals,
         items: {
-          create: items.map((item: any) => ({
+          create: itemsWithTax.map((item: any) => ({
             descrizione: item.descrizione,
             tipo: item.tipo,
             quantita: new Prisma.Decimal(item.quantita || 1),
