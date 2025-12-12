@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { adminAuth } from '@/lib/adminAuth';
+import ImpersonationBanner from './ImpersonationBanner';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -33,6 +34,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { href: '/admin/subscriptions', label: 'Abbonamenti', icon: '💳' },
     { href: '/admin/payments', label: 'Pagamenti', icon: '💵' },
     { href: '/admin/reports', label: 'Report', icon: '📈' },
+    { href: '/admin/audit-logs', label: 'Audit Log', icon: '📋' },
     { href: '/admin/settings', label: 'Impostazioni', icon: '⚙️' },
   ];
 
@@ -113,6 +115,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
+        <ImpersonationBanner />
         {children}
       </div>
     </div>

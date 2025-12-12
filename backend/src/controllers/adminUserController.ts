@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../config/database';
 import { hashPassword, comparePassword } from '../utils/password';
 import { generateAccessToken } from '../utils/jwt';
+import { logAuditAction } from '../middleware/auditLog';
 
 /**
  * Crea un super admin
@@ -76,6 +77,12 @@ export const loginSuperAdmin = async (req: Request, res: Response) => {
     };
 
     const accessToken = generateAccessToken(tokenPayload);
+
+    // Log audit
+    await logAuditAction(req, 'LOGIN', 'User', user.id, {
+      email: user.email,
+      isSuperAdmin: true,
+    });
 
     res.json({
       accessToken,

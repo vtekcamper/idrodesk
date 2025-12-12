@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { errorHandler } from './middleware/errorHandler';
+import { requestId } from './middleware/auditLog';
+import { apiRateLimiter, loginRateLimiter } from './middleware/rateLimit';
 
 // Routes
 import authRoutes from './routes/authRoutes';
@@ -26,6 +28,12 @@ app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
   credentials: true,
 }));
+
+// Request ID middleware (deve essere prima di tutto)
+app.use(requestId);
+
+// Rate limiting generale (applicato a tutte le route)
+app.use('/api', apiRateLimiter);
 
 // Stripe webhook (deve essere prima di express.json() per ricevere raw body)
 app.post('/api/admin/payments/webhook/stripe', express.raw({ type: 'application/json' }), async (req, res) => {

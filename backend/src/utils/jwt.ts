@@ -9,11 +9,13 @@ export interface JwtPayload {
   role: string;
   email: string;
   isSuperAdmin?: boolean;
+  isImpersonated?: boolean;
+  impersonatedBy?: string;
 }
 
-export function signToken(payload: JwtPayload): string {
+export function signToken(payload: JwtPayload, expiresIn?: string): string {
   const options: SignOptions = {
-    expiresIn: JWT_EXPIRES_IN,
+    expiresIn: expiresIn || JWT_EXPIRES_IN,
   };
   return jwt.sign(payload, JWT_SECRET, options);
 }

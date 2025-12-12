@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../config/database';
 import Stripe from 'stripe';
 import { PaymentProvider, PaymentStatus } from '@prisma/client';
+import { updateCompanySubscriptionStatus } from '../utils/subscriptionState';
 
 // Inizializza Stripe solo se la chiave è presente
 const getStripe = () => {
@@ -103,7 +104,7 @@ export const createPayment = async (req: Request, res: Response) => {
 };
 
 /**
- * Webhook Stripe per confermare pagamenti
+ * Webhook Stripe per confermare pagamenti (con idempotency)
  */
 export const stripeWebhook = async (req: Request, res: Response) => {
   const sig = req.headers['stripe-signature'] as string;
@@ -113,41 +114,185 @@ export const stripeWebhook = async (req: Request, res: Response) => {
     const stripe = getStripe();
     const event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
 
-    if (event.type === 'payment_intent.succeeded') {
-      const paymentIntent = event.data.object as Stripe.PaymentIntent;
-      
-      await prisma.payment.updateMany({
-        where: { providerPaymentId: paymentIntent.id },
+    // Verifica idempotency: controlla se l'evento è già stato processato
+    const existingEvent = await prisma.stripeEvent.findUnique({
+      where: { id: event.id },
+    });
+
+    if (existingEvent && existingEvent.processed) {
+      console.log(`Event ${event.id} already processed, skipping`);
+      return res.json({ received: true, message: 'Event already processed' });
+    }
+
+    // Salva evento (anche se non processato ancora, per tracking)
+    await prisma.stripeEvent.upsert({
+      where: { id: event.id },
+      create: {
+        id: event.id,
+        eventType: event.type,
+        processed: false,
+        metadata: event.data.object as any,
+      },
+      update: {
+        eventType: event.type,
+        metadata: event.data.object as any,
+      },
+    });
+
+    // Processa evento in base al tipo
+    try {
+      switch (event.type) {
+        case 'payment_intent.succeeded':
+          await handlePaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent);
+          break;
+
+        case 'payment_intent.payment_failed':
+          await handlePaymentIntentFailed(event.data.object as Stripe.PaymentIntent);
+          break;
+
+        case 'charge.refunded':
+          await handleChargeRefunded(event.data.object as Stripe.Charge);
+          break;
+
+        case 'invoice.payment_succeeded':
+          await handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
+          break;
+
+        case 'invoice.payment_failed':
+          await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
+          break;
+
+        default:
+          console.log(`Unhandled event type: ${event.type}`);
+      }
+
+      // Marca evento come processato
+      await prisma.stripeEvent.update({
+        where: { id: event.id },
         data: {
-          status: PaymentStatus.COMPLETED,
-          paidAt: new Date(),
+          processed: true,
+          processedAt: new Date(),
         },
       });
 
-      // Aggiorna abbonamento azienda se necessario
-      const payment = await prisma.payment.findFirst({
-        where: { providerPaymentId: paymentIntent.id },
-        include: { company: true },
+      res.json({ received: true });
+    } catch (processError: any) {
+      // Salva errore ma marca come processato per evitare retry infiniti
+      await prisma.stripeEvent.update({
+        where: { id: event.id },
+        data: {
+          processed: true,
+          processedAt: new Date(),
+          error: processError.message,
+        },
       });
 
-      if (payment && payment.subscriptionHistoryId) {
-        // Rinnova abbonamento
-        await prisma.company.update({
-          where: { id: payment.companyId },
-          data: {
-            abbonamentoAttivo: true,
-            dataScadenza: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 giorni
-          },
-        });
-      }
+      console.error(`Error processing event ${event.id}:`, processError);
+      // Rispondi 200 per evitare retry da Stripe, ma logga l'errore
+      res.status(200).json({ received: true, error: processError.message });
     }
-
-    res.json({ received: true });
   } catch (error: any) {
     console.error('Webhook error:', error);
     res.status(400).json({ error: `Webhook Error: ${error.message}` });
   }
 };
+
+/**
+ * Gestisce payment_intent.succeeded
+ */
+async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent) {
+  await prisma.payment.updateMany({
+    where: { providerPaymentId: paymentIntent.id },
+    data: {
+      status: PaymentStatus.COMPLETED,
+      paidAt: new Date(),
+    },
+  });
+
+  // Aggiorna abbonamento azienda se necessario
+  const payment = await prisma.payment.findFirst({
+    where: { providerPaymentId: paymentIntent.id },
+    include: { company: true },
+  });
+
+  if (payment && payment.subscriptionHistoryId) {
+    // Rinnova abbonamento (30 giorni)
+    const newExpiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    
+    await prisma.company.update({
+      where: { id: payment.companyId },
+      data: {
+        abbonamentoAttivo: true,
+        dataScadenza: newExpiryDate,
+      },
+    });
+
+    // Aggiorna subscription status
+    await updateCompanySubscriptionStatus(prisma, payment.companyId);
+  }
+}
+
+/**
+ * Gestisce payment_intent.payment_failed
+ */
+async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
+  await prisma.payment.updateMany({
+    where: { providerPaymentId: paymentIntent.id },
+    data: {
+      status: PaymentStatus.FAILED,
+    },
+  });
+}
+
+/**
+ * Gestisce charge.refunded
+ */
+async function handleChargeRefunded(charge: Stripe.Charge) {
+  // Trova payment intent associato
+  const paymentIntentId = typeof charge.payment_intent === 'string' 
+    ? charge.payment_intent 
+    : charge.payment_intent?.id;
+
+  if (paymentIntentId) {
+    await prisma.payment.updateMany({
+      where: { providerPaymentId: paymentIntentId },
+      data: {
+        status: PaymentStatus.REFUNDED,
+      },
+    });
+  }
+}
+
+/**
+ * Gestisce invoice.payment_succeeded
+ */
+async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
+  // Se l'invoice ha un payment intent, aggiorna il payment
+  const paymentIntentId = typeof invoice.payment_intent === 'string'
+    ? invoice.payment_intent
+    : invoice.payment_intent?.id;
+
+  if (paymentIntentId) {
+    await handlePaymentIntentSucceeded({
+      id: paymentIntentId,
+    } as Stripe.PaymentIntent);
+  }
+}
+
+/**
+ * Gestisce invoice.payment_failed
+ */
+async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
+  const paymentIntentId = typeof invoice.payment_intent === 'string'
+    ? invoice.payment_intent
+    : invoice.payment_intent?.id;
+
+  if (paymentIntentId) {
+    await handlePaymentIntentFailed({
+      id: paymentIntentId,
+    } as Stripe.PaymentIntent);
+  }
+}
 
 /**
  * Ottiene tutti i pagamenti

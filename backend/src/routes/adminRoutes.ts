@@ -34,11 +34,22 @@ import {
   getExpiringSubscriptions,
   getTopCompanies,
 } from '../controllers/reportsController';
+import {
+  getAllAuditLogs,
+  getAuditLog,
+  getAuditStats,
+} from '../controllers/auditController';
+import {
+  impersonateUser,
+  stopImpersonation,
+} from '../controllers/impersonationController';
+import { runSubscriptionStateJob } from '../jobs/subscriptionStateJob';
 
 const router = Router();
 
-// Public routes (super admin login)
-router.post('/login', loginSuperAdmin);
+// Public routes (super admin login) - con rate limiting
+import { loginRateLimiter } from '../middleware/rateLimit';
+router.post('/login', loginRateLimiter, loginSuperAdmin);
 
 // Public route per verificare se esiste già un super admin
 router.get('/super-admins/check', async (req, res) => {
@@ -168,6 +179,26 @@ router.get('/emails', getAllEmailNotifications);
 router.get('/reports/advanced', getAdvancedReports);
 router.get('/reports/subscriptions/expiring', getExpiringSubscriptions);
 router.get('/reports/companies/top', getTopCompanies);
+
+// Audit Logs
+router.get('/audit-logs', getAllAuditLogs);
+router.get('/audit-logs/stats', getAuditStats);
+router.get('/audit-logs/:id', getAuditLog);
+
+// Impersonation
+router.post('/impersonate/:userId', impersonateUser);
+router.post('/impersonate/stop', stopImpersonation);
+
+// Jobs (solo super admin)
+router.post('/jobs/subscription-state', async (req, res) => {
+  try {
+    const result = await runSubscriptionStateJob();
+    res.json({ success: true, ...result });
+  } catch (error: any) {
+    console.error('Subscription state job error:', error);
+    res.status(500).json({ error: error.message || 'Errore nell\'esecuzione job' });
+  }
+});
 
 export default router;
 

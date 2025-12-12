@@ -130,12 +130,32 @@ export default function AdminCompanyDetailPage() {
                 <p className="font-medium text-lg">{company.pianoAbbonamento}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Stato</p>
-                <span className={`px-3 py-1 text-sm rounded ${
-                  company.abbonamentoAttivo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                }`}>
-                  {company.abbonamentoAttivo ? 'Attivo' : 'Inattivo'}
-                </span>
+                <p className="text-sm text-gray-500">Stato Abbonamento</p>
+                {company.subscriptionStatus ? (
+                  <div className="mt-1">
+                    <span className={`px-3 py-1 text-sm rounded font-medium ${
+                      company.subscriptionStatus === 'ACTIVE' ? 'bg-green-100 text-green-800' :
+                      company.subscriptionStatus === 'TRIAL' ? 'bg-blue-100 text-blue-800' :
+                      company.subscriptionStatus === 'PAST_DUE' ? 'bg-yellow-100 text-yellow-800' :
+                      company.subscriptionStatus === 'SUSPENDED' ? 'bg-red-100 text-red-800' :
+                      company.subscriptionStatus === 'CANCELED' ? 'bg-gray-100 text-gray-800' :
+                      'bg-gray-200 text-gray-600'
+                    }`}>
+                      {company.subscriptionStatus === 'ACTIVE' ? '✅ Attivo' :
+                       company.subscriptionStatus === 'TRIAL' ? '🔵 Trial' :
+                       company.subscriptionStatus === 'PAST_DUE' ? '⚠️ Scaduto' :
+                       company.subscriptionStatus === 'SUSPENDED' ? '🚫 Sospeso' :
+                       company.subscriptionStatus === 'CANCELED' ? '❌ Cancellato' :
+                       company.subscriptionStatus}
+                    </span>
+                  </div>
+                ) : (
+                  <span className={`px-3 py-1 text-sm rounded ${
+                    company.abbonamentoAttivo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}>
+                    {company.abbonamentoAttivo ? 'Attivo' : 'Inattivo'}
+                  </span>
+                )}
               </div>
               {company.dataScadenza && (
                 <div>

@@ -96,11 +96,29 @@ export default function AdminCompaniesPage() {
                       </span>
                     </td>
                     <td className="border p-2">
-                      <span className={`px-2 py-1 text-xs rounded ${
-                        company.abbonamentoAttivo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
-                        {company.abbonamentoAttivo ? 'Attivo' : 'Inattivo'}
-                      </span>
+                        {company.subscriptionStatus ? (
+                          <span className={`px-2 py-1 text-xs rounded font-medium ${
+                            company.subscriptionStatus === 'ACTIVE' ? 'bg-green-100 text-green-800' :
+                            company.subscriptionStatus === 'TRIAL' ? 'bg-blue-100 text-blue-800' :
+                            company.subscriptionStatus === 'PAST_DUE' ? 'bg-yellow-100 text-yellow-800' :
+                            company.subscriptionStatus === 'SUSPENDED' ? 'bg-red-100 text-red-800' :
+                            company.subscriptionStatus === 'CANCELED' ? 'bg-gray-100 text-gray-800' :
+                            'bg-gray-200 text-gray-600'
+                          }`}>
+                            {company.subscriptionStatus === 'ACTIVE' ? 'Attivo' :
+                             company.subscriptionStatus === 'TRIAL' ? 'Trial' :
+                             company.subscriptionStatus === 'PAST_DUE' ? 'Scaduto' :
+                             company.subscriptionStatus === 'SUSPENDED' ? 'Sospeso' :
+                             company.subscriptionStatus === 'CANCELED' ? 'Cancellato' :
+                             company.subscriptionStatus}
+                          </span>
+                        ) : (
+                          <span className={`px-2 py-1 text-xs rounded ${
+                            company.abbonamentoAttivo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {company.abbonamentoAttivo ? 'Attivo' : 'Inattivo'}
+                          </span>
+                        )}
                     </td>
                     <td className="border p-2">{company._count.users}</td>
                     <td className="border p-2">{company._count.clients}</td>

@@ -211,6 +211,35 @@ export default function AdminUserDetailPage() {
             <div className="card">
               <h2 className="text-lg font-semibold mb-4">Azioni</h2>
               <div className="space-y-2">
+                {user.companyId && !user.isSuperAdmin && (
+                  <button
+                    onClick={async () => {
+                      if (confirm(`Vuoi impersonare ${user.nome} ${user.cognome}?`)) {
+                        try {
+                          const response = await adminApi.impersonateUser(user.id);
+                          const { accessToken, user: impersonatedUser } = response.data;
+                          
+                          // Aggiorna token e user
+                          const { apiClient } = await import('@/lib/api');
+                          apiClient.setToken(accessToken);
+                          if (typeof window !== 'undefined') {
+                            localStorage.setItem('accessToken', accessToken);
+                            localStorage.setItem('user', JSON.stringify(impersonatedUser));
+                            localStorage.setItem('isImpersonated', 'true');
+                            localStorage.setItem('company', JSON.stringify(impersonatedUser.company));
+                            // Redirect alla dashboard tenant
+                            router.push('/dashboard');
+                          }
+                        } catch (error: any) {
+                          alert(`Errore: ${error.response?.data?.error || error.message}`);
+                        }
+                      }
+                    }}
+                    className="w-full btn btn-primary"
+                  >
+                    👤 Impersona Utente
+                  </button>
+                )}
                 <button
                   onClick={() => {
                     if (confirm(`Sei sicuro di ${user.attivo ? 'disattivare' : 'attivare'} questo utente?`)) {

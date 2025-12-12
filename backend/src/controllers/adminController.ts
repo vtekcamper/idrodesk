@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import prisma from '../config/database';
 import { getPlanLimits } from '../config/planLimits';
+import { calculateSubscriptionStatus, updateCompanySubscriptionStatus } from '../utils/subscriptionState';
+import { logAuditAction } from '../middleware/auditLog';
 
 /**
  * Ottiene tutte le aziende (solo super admin)
@@ -66,8 +68,18 @@ export const getAllCompanies = async (req: Request, res: Response) => {
           },
         });
 
+        // Calcola subscription status se non presente
+        const subscriptionStatus = company.subscriptionStatus || 
+          calculateSubscriptionStatus(
+            company.dataScadenza,
+            company.abbonamentoAttivo,
+            company.pianoAbbonamento,
+            company.deletedAt
+          );
+
         return {
           ...company,
+          subscriptionStatus,
           usage: {
             users: {
               current: company._count.users,
@@ -140,8 +152,18 @@ export const getCompany = async (req: Request, res: Response) => {
 
     const limits = getPlanLimits(company.pianoAbbonamento);
 
+    // Calcola subscription status se non presente
+    const subscriptionStatus = company.subscriptionStatus || 
+      calculateSubscriptionStatus(
+        company.dataScadenza,
+        company.abbonamentoAttivo,
+        company.pianoAbbonamento,
+        company.deletedAt
+      );
+
     res.json({
       ...company,
+      subscriptionStatus,
       limits,
     });
   } catch (error: any) {
@@ -198,7 +220,29 @@ export const updateCompanyPlan = async (req: Request, res: Response) => {
       },
     });
 
-    res.json(updated);
+    // Ricalcola e aggiorna subscription status
+    const newStatus = await updateCompanySubscriptionStatus(prisma, id);
+
+    // Log audit
+    await logAuditAction(req, 'CHANGE_PLAN', 'Company', id, {
+      before: {
+        pianoAbbonamento: company.pianoAbbonamento,
+        abbonamentoAttivo: company.abbonamentoAttivo,
+        dataScadenza: company.dataScadenza,
+      },
+      after: {
+        pianoAbbonamento: updated.pianoAbbonamento,
+        abbonamentoAttivo: updated.abbonamentoAttivo,
+        dataScadenza: updated.dataScadenza,
+        subscriptionStatus: newStatus,
+      },
+      motivo,
+    });
+
+    res.json({
+      ...updated,
+      subscriptionStatus: newStatus,
+    });
   } catch (error: any) {
     console.error('Update company plan error:', error);
     res.status(500).json({ error: error.message || 'Errore nell\'aggiornamento piano' });
@@ -242,7 +286,26 @@ export const toggleSubscription = async (req: Request, res: Response) => {
       },
     });
 
-    res.json(updated);
+    // Ricalcola subscription status
+    const newStatus = await updateCompanySubscriptionStatus(prisma, id);
+
+    // Log audit
+    await logAuditAction(req, 'TOGGLE_SUBSCRIPTION', 'Company', id, {
+      before: {
+        abbonamentoAttivo: company.abbonamentoAttivo,
+        subscriptionStatus: company.subscriptionStatus,
+      },
+      after: {
+        abbonamentoAttivo: updated.abbonamentoAttivo,
+        subscriptionStatus: newStatus,
+      },
+      motivo,
+    });
+
+    res.json({
+      ...updated,
+      subscriptionStatus: newStatus,
+    });
   } catch (error: any) {
     console.error('Toggle subscription error:', error);
     res.status(500).json({ error: error.message || 'Errore nella modifica abbonamento' });

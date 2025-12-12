@@ -49,6 +49,30 @@ export const adminApi = {
     apiClient.axiosInstance.get('/admin/reports/subscriptions/expiring', { params }),
   getTopCompanies: (params?: { limit?: number; metric?: string }) =>
     apiClient.axiosInstance.get('/admin/reports/companies/top', { params }),
+
+  // Check super admin exists
+  checkSuperAdminExists: () => apiClient.axiosInstance.get('/admin/super-admins/check'),
+
+  // Audit Logs
+  getAllAuditLogs: (params?: {
+    page?: number;
+    limit?: number;
+    actorType?: string;
+    action?: string;
+    entity?: string;
+    companyId?: string;
+    actorId?: string;
+    startDate?: string;
+    endDate?: string;
+    search?: string;
+  }) => apiClient.axiosInstance.get('/admin/audit-logs', { params }),
+  getAuditLog: (id: string) => apiClient.axiosInstance.get(`/admin/audit-logs/${id}`),
+  getAuditStats: (params?: { startDate?: string; endDate?: string }) =>
+    apiClient.axiosInstance.get('/admin/audit-logs/stats', { params }),
+
+  // Impersonation
+  impersonateUser: (userId: string) => apiClient.axiosInstance.post(`/admin/impersonate/${userId}`),
+  stopImpersonation: () => apiClient.axiosInstance.post('/admin/impersonate/stop'),
 };
 
 

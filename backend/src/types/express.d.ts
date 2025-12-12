@@ -9,6 +9,8 @@ declare global {
         role: Ruolo;
         email: string;
         isSuperAdmin?: boolean;
+        isImpersonated?: boolean;
+        impersonatedBy?: string;
       };
       companyId?: string;
       requestId?: string;
